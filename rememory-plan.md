@@ -64,6 +64,22 @@ The encrypted cloud backups already exist. ReMemory is the last mile: getting th
 └───────────────────────────────────────────────────────┘
 ```
 
+notes:
+
+the idea is for the manifest to be basically a folder that gets turned into a tar file, inside the folder is where I will put my 1password recovery kit, and other important files. the tool needs to guide the user through creating this manifest, encrypting it, splitting the key, and generating the bundles.
+
+rememory init needs to start like a new project, so it creates a new folder with the right files inside:
+- project.yml
+- manifest/ folder where files go
+- manifest/readme.md (readme for decrypted bundle, by default its generated with ideas of what to populate this with, meant for me to re-write before encrypting)
+
+the other rememory commands i run inside that project
+
+in the project.yml is where i define my friends names and their contact details, the software asks me for them as it generates the project. i can base a project on an old one, to ocpy the friends, etc
+
+i want to combine more things, i want seal to also do split (no separate split), also, i want split to do the test automatically. split by default doesn't show
+the password (i don't need to, the command does all things and gives me validated bundles) - the signature of each friend's bundle is written to project yaml so it can be verified in the future
+
 ---
 
 ## What goes in the manifest
