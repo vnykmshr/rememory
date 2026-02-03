@@ -24,66 +24,9 @@ graph TD
     F --> G[Download recovered files]
 ```
 
-## Installation
-
-### From GitHub Releases
-
-Download the latest binary for your platform from [Releases](https://github.com/eljojo/rememory/releases).
-
-### With Go
-
-```bash
-go install github.com/eljojo/rememory/cmd/rememory@latest
-```
-
-Optionally, generate man pages:
-
-```bash
-mkdir -p ~/.local/share/man/man1
-rememory doc ~/.local/share/man/man1
-```
-
-<details>
-<summary>With Nix</summary>
-
-Run directly without installing:
-
-```bash
-nix run github:eljojo/rememory
-```
-
-Or add to your flake inputs:
-
-```nix
-{
-  inputs.rememory.url = "github:eljojo/rememory";
-  inputs.rememory.inputs.nixpkgs.follows = "nixpkgs";
-}
-```
-
-Then include in your NixOS configuration:
-
-```nix
-# configuration.nix
-{ inputs, ... }:
-{
-  environment.systemPackages = [ inputs.rememory.packages.${system}.default ];
-}
-```
-
-Or in home-manager:
-
-```nix
-# home.nix
-{ inputs, ... }:
-{
-  home.packages = [ inputs.rememory.packages.${system}.default ];
-}
-```
-
-</details>
-
 ## Quick Start
+
+See the **[User Guide](docs/guide.md)** for a complete tutorial.
 
 ### 1. Create a Project
 
@@ -164,17 +107,6 @@ Send each friend their bundle. Each bundle contains:
 | `recover.html` | Browser-based recovery tool (~5 MB, self-contained) |
 
 **A single share reveals absolutely nothing.** But tell your friends to keep their bundle safe anyway—it's their responsibility to you.
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `rememory init <name>` | Create a new project |
-| `rememory seal` | Encrypt manifest, create shares, and generate bundles |
-| `rememory bundle` | Regenerate bundles (if lost or need updating) |
-| `rememory status` | Show project status |
-| `rememory verify-bundle <zip>` | Verify a bundle's integrity |
-| `rememory recover` | Recover secrets from shares |
 
 ## How It Works
 

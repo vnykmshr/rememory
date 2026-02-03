@@ -38,6 +38,12 @@ Download the latest binary for your platform from [Releases](https://github.com/
 
 ```bash
 go install github.com/eljojo/rememory/cmd/rememory@latest
+
+Optionally, generate man pages:
+
+```bash
+mkdir -p ~/.local/share/man/man1
+rememory doc ~/.local/share/man/man1
 ```
 
 ### With Nix
@@ -46,13 +52,42 @@ go install github.com/eljojo/rememory/cmd/rememory@latest
 nix run github:eljojo/rememory
 ```
 
-Or add to your flake:
+<details>
+<summary>Install</summary>
+
+Run directly without installing:
+
+```bash
+Add to your flake inputs:
 
 ```nix
 {
   inputs.rememory.url = "github:eljojo/rememory";
   inputs.rememory.inputs.nixpkgs.follows = "nixpkgs";
 }
+```
+
+Then include in your NixOS configuration:
+
+```nix
+# configuration.nix
+{ inputs, ... }:
+{
+  environment.systemPackages = [ inputs.rememory.packages.${system}.default ];
+}
+```
+
+Or in home-manager:
+
+```nix
+# home.nix
+{ inputs, ... }:
+{
+  home.packages = [ inputs.rememory.packages.${system}.default ];
+}
+```
+
+</details>
 ```
 
 ## Creating Your First Project
