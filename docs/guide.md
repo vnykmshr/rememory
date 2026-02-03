@@ -151,44 +151,43 @@ This:
 2. Encrypts all files in `manifest/` using age encryption
 3. Splits the passphrase into shares using Shamir's Secret Sharing
 4. Verifies that recovery works correctly
+5. Generates distribution bundles for each friend
 
 ```
-Encrypting manifest...
-  ✓ Created MANIFEST.age (2.3 KB)
+Archiving manifest/ (3 files, 1.2 KB)...
+Encrypting with age...
+Splitting into 5 shares (threshold: 3)...
+Verifying reconstruction... OK
 
-Splitting passphrase (3 of 5)...
-  ✓ Share for Alice: SHARE-alice.txt
-  ✓ Share for Bob: SHARE-bob.txt
-  ✓ Share for Carol: SHARE-carol.txt
-  ✓ Share for David: SHARE-david.txt
-  ✓ Share for Eve: SHARE-eve.txt
+Sealed:
+  ✓ output/MANIFEST.age
+  ✓ output/shares/SHARE-alice.txt
+  ✓ output/shares/SHARE-bob.txt
+  ✓ output/shares/SHARE-carol.txt
+  ✓ output/shares/SHARE-david.txt
+  ✓ output/shares/SHARE-eve.txt
 
-Verifying recovery...
-  ✓ Successfully verified with shares: Alice, Bob, Carol
+Generating bundles for 5 friends...
 
-Sealed! Run 'rememory bundle' to create distribution packages.
+Bundles ready to distribute:
+  ✓ bundle-alice.zip (5.4 MB)
+  ✓ bundle-bob.zip (5.4 MB)
+  ✓ bundle-carol.zip (5.4 MB)
+  ✓ bundle-david.zip (5.4 MB)
+  ✓ bundle-eve.zip (5.4 MB)
+
+Saved to: output/bundles
 ```
 
-## Creating Distribution Bundles
+Each bundle is ~5 MB because it includes the complete recovery tool.
 
-Generate the ZIP files to send to your friends:
+### Regenerating Bundles
+
+If you need to regenerate bundles (e.g., you lost them or want to update `recover.html`):
 
 ```bash
 rememory bundle
 ```
-
-This creates a self-contained bundle for each friend:
-
-```
-output/bundles/
-├── bundle-alice.zip  (5.4 MB)
-├── bundle-bob.zip    (5.4 MB)
-├── bundle-carol.zip  (5.4 MB)
-├── bundle-david.zip  (5.4 MB)
-└── bundle-eve.zip    (5.4 MB)
-```
-
-Each bundle is ~5 MB because it includes the complete recovery tool.
 
 ## Distributing to Friends
 
@@ -377,8 +376,8 @@ my-recovery-2026/
 | Command | Description |
 |---------|-------------|
 | `rememory init <name>` | Create a new project |
-| `rememory seal` | Encrypt manifest and create shares |
-| `rememory bundle` | Generate distribution bundles |
+| `rememory seal` | Encrypt manifest, create shares, and generate bundles |
+| `rememory bundle` | Regenerate bundles (if lost or need updating) |
 | `rememory status` | Show project status and summary |
 | `rememory verify` | Verify integrity of sealed files |
 | `rememory verify-bundle <zip>` | Verify a bundle's integrity |

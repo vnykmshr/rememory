@@ -7,7 +7,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/eljojo/rememory/internal/bundle"
 	"github.com/eljojo/rememory/internal/crypto"
+	"github.com/eljojo/rememory/internal/html"
 	"github.com/eljojo/rememory/internal/manifest"
 	"github.com/eljojo/rememory/internal/project"
 	"github.com/eljojo/rememory/internal/shamir"
@@ -16,15 +18,17 @@ import (
 
 var sealCmd = &cobra.Command{
 	Use:   "seal",
-	Short: "Encrypt the manifest and create shares for friends",
-	Long: `Seal encrypts the manifest directory and splits the passphrase into shares.
+	Short: "Encrypt the manifest, create shares, and generate bundles",
+	Long: `Seal encrypts the manifest directory, splits the passphrase into shares,
+and generates distribution bundles for each friend.
 
 This command:
   1. Archives the manifest/ directory
   2. Encrypts it with a generated passphrase
   3. Splits the passphrase into shares (one per friend)
   4. Verifies the shares can reconstruct the passphrase
-  5. Writes checksums to project.yml
+  5. Generates ZIP bundles for distribution
+  6. Writes checksums to project.yml
 
 Run this command inside a project directory (created with 'rememory init').`,
 	RunE: runSeal,
@@ -174,18 +178,48 @@ func runSeal(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("saving project: %w", err)
 	}
 
-	// Print summary
+	// Print seal summary
 	fmt.Println()
-	fmt.Println("Created:")
+	fmt.Println("Sealed:")
 	relManifest, _ := filepath.Rel(p.Path, manifestAgePath)
-	fmt.Printf("  %s\n", relManifest)
+	fmt.Printf("  %s %s\n", green("✓"), relManifest)
 	for _, si := range shareInfos {
-		fmt.Printf("  %s  [%s]\n", si.File, truncateHash(si.Checksum))
+		fmt.Printf("  %s %s\n", green("✓"), si.File)
 	}
+
+	// Generate bundles automatically
 	fmt.Println()
-	fmt.Println("Checksums written to project.yml")
+	fmt.Printf("Generating bundles for %d friends...\n", len(p.Friends))
+
+	wasmBytes := html.GetWASMBytes()
+	if len(wasmBytes) == 0 {
+		return fmt.Errorf("WASM binary not embedded - rebuild with 'make build'")
+	}
+
+	cfg := bundle.Config{
+		Version:          version,
+		GitHubReleaseURL: fmt.Sprintf("https://github.com/eljojo/rememory/releases/tag/%s", version),
+		WASMBytes:        wasmBytes,
+	}
+
+	if err := bundle.GenerateAll(p, cfg); err != nil {
+		return fmt.Errorf("generating bundles: %w", err)
+	}
+
+	// Print bundle summary
+	bundlesDir := filepath.Join(p.OutputPath(), "bundles")
+	entries, _ := os.ReadDir(bundlesDir)
+
 	fmt.Println()
-	fmt.Println("Give each friend their share file + a copy of MANIFEST.age")
+	fmt.Println("Bundles ready to distribute:")
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			info, _ := entry.Info()
+			fmt.Printf("  %s %s (%s)\n", green("✓"), entry.Name(), formatSize(info.Size()))
+		}
+	}
+
+	fmt.Printf("\nSaved to: %s\n", bundlesDir)
 
 	return nil
 }

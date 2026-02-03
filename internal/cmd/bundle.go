@@ -13,13 +13,19 @@ import (
 
 var bundleCmd = &cobra.Command{
 	Use:   "bundle",
-	Short: "Generate distribution bundles for all friends",
-	Long: `Creates a ZIP bundle for each friend containing:
-  - README.txt (with embedded share, contacts, instructions)
-  - MANIFEST.age (encrypted payload)
-  - recover.html (browser-based recovery tool)
+	Short: "Regenerate distribution bundles for all friends",
+	Long: `Regenerates ZIP bundles for each friend. This is useful if you:
+  - Lost the original bundle files
+  - Want to update bundles with a newer version of recover.html
 
-Each bundle is self-contained and can be distributed to the respective friend.`,
+Note: 'rememory seal' automatically generates bundles, so you typically
+don't need to run this command separately.
+
+Each bundle contains:
+  - README.txt (with embedded share, contacts, instructions)
+  - README.pdf (same content, formatted for printing)
+  - MANIFEST.age (encrypted payload)
+  - recover.html (browser-based recovery tool)`,
 	RunE: runBundle,
 }
 
