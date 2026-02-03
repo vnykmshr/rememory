@@ -129,7 +129,7 @@ export class RecoveryPage {
   }
 
   async expectUIElements(): Promise<void> {
-    await expect(this.page.locator('h1')).toContainText('ReMemory Recovery');
+    await expect(this.page.locator('h1')).toContainText('🧠 ReMemory Recovery');
     await expect(this.page.locator('#share-drop-zone')).toBeVisible();
     await expect(this.page.locator('#manifest-drop-zone')).toBeVisible();
   }
