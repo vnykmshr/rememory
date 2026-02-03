@@ -187,9 +187,8 @@ func loadShares(p *project.Project) ([]*shamir.Share, error) {
 	return shares, nil
 }
 
-// sanitizeName converts a name to a filesystem-safe string.
+// sanitizeName converts a name to a filesystem-safe lowercase string.
 func sanitizeName(name string) string {
-	// Simple sanitization - lowercase and replace spaces with hyphens
 	result := ""
 	for _, r := range name {
 		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
@@ -198,7 +197,7 @@ func sanitizeName(name string) string {
 			result += "-"
 		}
 	}
-	return result
+	return strings.ToLower(result)
 }
 
 // VerifyBundle verifies the integrity of a bundle ZIP file.

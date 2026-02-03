@@ -453,6 +453,7 @@ func verifyBundle(t *testing.T, bundlePath string, friend project.Friend, allFri
 	// Check expected files exist
 	expectedFiles := map[string]bool{
 		"README.txt":   false,
+		"README.pdf":   false,
 		"MANIFEST.age": false,
 		"recover.html": false,
 	}
