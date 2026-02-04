@@ -1,6 +1,8 @@
 package html
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
 	"strings"
@@ -39,8 +41,8 @@ func GenerateRecoverHTML(wasmBytes []byte, version, githubURL string, personaliz
 	// Embed app.js
 	html = strings.Replace(html, "{{APP_JS}}", appJS, 1)
 
-	// Embed WASM as base64
-	wasmB64 := base64.StdEncoding.EncodeToString(wasmBytes)
+	// Embed WASM as gzip-compressed base64 (reduces size by ~70%)
+	wasmB64 := compressAndEncode(wasmBytes)
 	html = strings.Replace(html, "{{WASM_BASE64}}", wasmB64, 1)
 
 	// Replace version and GitHub URL
@@ -58,4 +60,14 @@ func GenerateRecoverHTML(wasmBytes []byte, version, githubURL string, personaliz
 	html = strings.Replace(html, "{{PERSONALIZATION_DATA}}", personalizationJSON, 1)
 
 	return html
+}
+
+// compressAndEncode gzip-compresses data and returns base64-encoded result.
+// This reduces WASM size by ~70% in the embedded HTML.
+func compressAndEncode(data []byte) string {
+	var buf bytes.Buffer
+	gz, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
+	gz.Write(data)
+	gz.Close()
+	return base64.StdEncoding.EncodeToString(buf.Bytes())
 }

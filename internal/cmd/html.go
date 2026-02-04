@@ -38,23 +38,27 @@ func init() {
 func runHTML(cmd *cobra.Command, args []string) error {
 	subcommand := args[0]
 
-	// Get embedded WASM binary
-	wasmBytes := html.GetWASMBytes()
-	if len(wasmBytes) == 0 {
-		return fmt.Errorf("WASM binary not embedded - rebuild with 'make build'")
-	}
-
 	var content string
 	githubURL := fmt.Sprintf("https://github.com/eljojo/rememory/releases/tag/%s", version)
 
 	switch subcommand {
 	case "recover":
 		// Generate generic recover.html (without personalization)
-		content = html.GenerateRecoverHTML(wasmBytes, version, githubURL, nil)
+		// Uses smaller recovery-only WASM
+		recoverWASM := html.GetRecoverWASMBytes()
+		if len(recoverWASM) == 0 {
+			return fmt.Errorf("recover.wasm not embedded - rebuild with 'make build'")
+		}
+		content = html.GenerateRecoverHTML(recoverWASM, version, githubURL, nil)
 
 	case "create":
 		// Generate rememory.html (bundle creation tool)
-		content = html.GenerateRememoryHTML(wasmBytes, version, githubURL)
+		// Uses create.wasm which self-contains recover.wasm for generating bundles
+		createWASM := html.GetCreateWASMBytes()
+		if len(createWASM) == 0 {
+			return fmt.Errorf("create.wasm not embedded - rebuild with 'make build'")
+		}
+		content = html.GenerateRememoryHTML(createWASM, version, githubURL)
 
 	default:
 		return fmt.Errorf("unknown subcommand: %s (use 'recover' or 'create')", subcommand)

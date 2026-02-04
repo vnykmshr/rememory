@@ -30,7 +30,25 @@ var rememoryHTMLTemplate string
 //go:embed assets/create-app.js
 var createAppJS string
 
-// GetWASMBytes returns the embedded WASM binary.
-func GetWASMBytes() []byte {
+// createWASM is set at build time for the CLI binary (not for WASM builds)
+// This avoids circular dependency since create.wasm embeds the html package
+var createWASM []byte
+
+// GetRecoverWASMBytes returns the embedded recovery-only WASM binary.
+// This smaller WASM is used in recover.html for bundle distribution.
+func GetRecoverWASMBytes() []byte {
 	return recoverWASM
+}
+
+// GetCreateWASMBytes returns the full WASM binary with bundle creation.
+// This larger WASM is used in rememory.html for the creation tool.
+// Note: Must be set via SetCreateWASMBytes before use (done in CLI init).
+func GetCreateWASMBytes() []byte {
+	return createWASM
+}
+
+// SetCreateWASMBytes sets the create.wasm bytes.
+// Called by CLI initialization to avoid circular embedding.
+func SetCreateWASMBytes(data []byte) {
+	createWASM = data
 }

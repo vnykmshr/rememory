@@ -1,5 +1,6 @@
 /rememory
 /internal/html/assets/recover.wasm
+/internal/html/assets/create.wasm
 /node_modules/
 /e2e/playwright-report/
 /test-results/

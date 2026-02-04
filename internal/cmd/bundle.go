@@ -56,10 +56,10 @@ func runBundle(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("project must be sealed before generating bundles (run 'rememory seal' first)")
 	}
 
-	// Get embedded WASM binary
-	wasmBytes := html.GetWASMBytes()
+	// Get embedded recovery WASM binary (smaller, for bundles)
+	wasmBytes := html.GetRecoverWASMBytes()
 	if len(wasmBytes) == 0 {
-		return fmt.Errorf("WASM binary not embedded - rebuild with 'make build'")
+		return fmt.Errorf("recover.wasm not embedded - rebuild with 'make build'")
 	}
 
 	// Generate bundles

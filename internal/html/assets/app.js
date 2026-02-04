@@ -155,11 +155,11 @@
       window.rememoryAppReady = true;
       elements.loadingOverlay.classList.add('hidden');
     } catch (err) {
-      // Try loading from embedded base64 as fallback
+      // Try loading from embedded gzip-compressed base64 as fallback
       if (typeof WASM_BINARY !== 'undefined') {
         try {
           const go = new Go();
-          const bytes = base64ToArrayBuffer(WASM_BINARY);
+          const bytes = await decodeAndDecompressWasm(WASM_BINARY);
           const result = await WebAssembly.instantiate(bytes, go.importObject);
           go.run(result.instance);
           await waitForWasm();
@@ -168,6 +168,7 @@
           elements.loadingOverlay.classList.add('hidden');
           return;
         } catch (e) {
+          console.error('WASM initialization failed:', e);
           // WASM initialization failed - will show error to user below
         }
       }
@@ -188,13 +189,38 @@
     });
   }
 
-  function base64ToArrayBuffer(base64) {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
+  // Decode base64 and decompress gzip-compressed WASM
+  async function decodeAndDecompressWasm(base64) {
+    // Decode base64 to get gzip-compressed data
+    const compressed = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+
+    // Decompress using DecompressionStream (modern browsers)
+    if (typeof DecompressionStream !== 'undefined') {
+      const ds = new DecompressionStream('gzip');
+      const writer = ds.writable.getWriter();
+      writer.write(compressed);
+      writer.close();
+      const reader = ds.readable.getReader();
+      const chunks = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+      }
+      const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+      const bytes = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const chunk of chunks) {
+        bytes.set(chunk, offset);
+        offset += chunk.length;
+      }
+      return bytes.buffer;
+    } else if (typeof pako !== 'undefined') {
+      // Fallback: use pako if available
+      return pako.inflate(compressed).buffer;
+    } else {
+      throw new Error('Browser does not support DecompressionStream');
     }
-    return bytes.buffer;
   }
 
   // Setup drop zones

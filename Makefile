@@ -8,10 +8,15 @@ LDFLAGS := -ldflags "-s -w -X main.version=$(VERSION)"
 build: wasm
 	go build $(LDFLAGS) -o $(BINARY) ./cmd/rememory
 
-# Build WASM recovery module
+# Build WASM modules
+# - recover.wasm: Small, recovery-only (for bundles)
+# - create.wasm: Full, includes bundle creation logic (for rememory.html)
 wasm:
 	@mkdir -p internal/html/assets
+	@echo "Building recover.wasm (recovery only)..."
 	GOOS=js GOARCH=wasm go build -o internal/html/assets/recover.wasm ./internal/wasm
+	@echo "Building create.wasm (full bundle creation)..."
+	GOOS=js GOARCH=wasm go build -tags create -o internal/html/assets/create.wasm ./internal/wasm
 	@if [ ! -f internal/html/assets/wasm_exec.js ]; then \
 		cp "$$(go env GOROOT)/lib/wasm/wasm_exec.js" internal/html/assets/ 2>/dev/null || \
 		cp "$$(go env GOROOT)/misc/wasm/wasm_exec.js" internal/html/assets/ 2>/dev/null || \
@@ -44,7 +49,7 @@ lint:
 
 clean:
 	rm -f $(BINARY) coverage.out coverage.html
-	rm -f internal/html/assets/recover.wasm
+	rm -f internal/html/assets/recover.wasm internal/html/assets/create.wasm
 	rm -rf dist/ man/
 
 # Generate man pages

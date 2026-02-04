@@ -1,15 +1,15 @@
 package html
 
 import (
-	"encoding/base64"
 	"strings"
 )
 
 // GenerateRememoryHTML creates the complete rememory.html with all assets embedded.
-// wasmBytes should be the compiled recover.wasm binary.
+// createWASMBytes is the create.wasm binary (runs in browser for bundle creation).
+// Note: create.wasm self-contains recover.wasm embedded within it (via html.GetRecoverWASMBytes()).
 // version is the rememory version string.
 // githubURL is the URL to download CLI binaries.
-func GenerateRememoryHTML(wasmBytes []byte, version, githubURL string) string {
+func GenerateRememoryHTML(createWASMBytes []byte, version, githubURL string) string {
 	html := rememoryHTMLTemplate
 
 	// Embed styles
@@ -21,9 +21,10 @@ func GenerateRememoryHTML(wasmBytes []byte, version, githubURL string) string {
 	// Embed create-app.js
 	html = strings.Replace(html, "{{CREATE_APP_JS}}", createAppJS, 1)
 
-	// Embed WASM as base64
-	wasmB64 := base64.StdEncoding.EncodeToString(wasmBytes)
-	html = strings.Replace(html, "{{WASM_BASE64}}", wasmB64, 1)
+	// Embed create.wasm as gzip-compressed base64 (this runs in the browser)
+	// Note: create.wasm contains recover.wasm embedded within it for generating bundles
+	createWASMB64 := compressAndEncode(createWASMBytes)
+	html = strings.Replace(html, "{{WASM_BASE64}}", createWASMB64, 1)
 
 	// Replace version and GitHub URL
 	html = strings.Replace(html, "{{VERSION}}", version, -1)

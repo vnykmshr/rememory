@@ -1,4 +1,4 @@
-//go:build js && wasm
+//go:build js && wasm && create
 
 package main
 
@@ -186,10 +186,9 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 	// Current timestamp for all bundles
 	now := time.Now().UTC()
 
-	// Get WASM bytes for embedding in recover.html
-	// Note: In WASM context, we need to get the WASM binary that was loaded
-	// We'll pass it through from JavaScript or use the embedded version
-	wasmBytes := html.GetWASMBytes()
+	// Get recovery WASM bytes for embedding in recover.html
+	// Note: In WASM context, we use the embedded recover.wasm (smaller, recovery-only)
+	wasmBytes := html.GetRecoverWASMBytes()
 
 	// Create shares and bundles
 	bundles := make([]BundleOutput, n)

@@ -258,9 +258,9 @@ Note: In a real project, these would be your actual sensitive credentials.
 	fmt.Println()
 	fmt.Printf("Generating bundles for %d friends...\n", len(p.Friends))
 
-	wasmBytes := html.GetWASMBytes()
+	wasmBytes := html.GetRecoverWASMBytes()
 	if len(wasmBytes) == 0 {
-		return fmt.Errorf("WASM binary not embedded - rebuild with 'make build'")
+		return fmt.Errorf("recover.wasm not embedded - rebuild with 'make build'")
 	}
 
 	cfg := bundle.Config{
