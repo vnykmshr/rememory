@@ -9,21 +9,24 @@ import (
 )
 
 var htmlCmd = &cobra.Command{
-	Use:   "html [recover|create]",
+	Use:   "html [index|create|docs|recover]",
 	Short: "Generate standalone HTML files for static hosting",
 	Long: `Generate standalone HTML files that can be hosted on a static website.
 
 Commands:
-  recover  Generate recover.html (recovery tool for collecting shares)
+  index    Generate index.html (landing page)
   create   Generate maker.html (bundle creation tool)
+  docs     Generate docs.html (documentation page)
+  recover  Generate recover.html (recovery tool for collecting shares)
 
-Both HTML files are completely self-contained with embedded WASM binary,
+The create and recover HTML files are self-contained with embedded WASM binary,
 JavaScript, and CSS. They work fully offline.
 
 Examples:
-  rememory html recover > recover.html
+  rememory html index > index.html
   rememory html create > maker.html
-  rememory html recover --output dist/recover.html`,
+  rememory html docs > docs.html
+  rememory html recover > recover.html`,
 	Args: cobra.ExactArgs(1),
 	RunE: runHTML,
 }
@@ -42,6 +45,14 @@ func runHTML(cmd *cobra.Command, args []string) error {
 	githubURL := fmt.Sprintf("https://github.com/eljojo/rememory/releases/tag/%s", version)
 
 	switch subcommand {
+	case "index":
+		// Generate index.html (landing page)
+		content = html.GenerateIndexHTML(version, githubURL)
+
+	case "docs":
+		// Generate docs.html (documentation page)
+		content = html.GenerateDocsHTML(version, githubURL)
+
 	case "recover":
 		// Generate generic recover.html (without personalization)
 		// Uses smaller recovery-only WASM
@@ -61,7 +72,7 @@ func runHTML(cmd *cobra.Command, args []string) error {
 		content = html.GenerateMakerHTML(createWASM, version, githubURL)
 
 	default:
-		return fmt.Errorf("unknown subcommand: %s (use 'recover' or 'create')", subcommand)
+		return fmt.Errorf("unknown subcommand: %s (use 'index', 'create', 'docs', or 'recover')", subcommand)
 	}
 
 	// Output to file or stdout

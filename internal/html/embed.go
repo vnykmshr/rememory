@@ -30,6 +30,14 @@ var makerHTMLTemplate string
 //go:embed assets/create-app.js
 var createAppJS string
 
+// Static page templates (no WASM needed)
+
+//go:embed assets/index.html
+var indexHTMLTemplate string
+
+//go:embed assets/docs.html
+var docsHTMLTemplate string
+
 // createWASM is set at build time for the CLI binary (not for WASM builds)
 // This avoids circular dependency since create.wasm embeds the html package
 var createWASM []byte

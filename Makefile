@@ -1,4 +1,4 @@
-.PHONY: build test test-e2e test-e2e-headed lint clean install wasm build-all bump-patch bump-minor bump-major man html
+.PHONY: build test test-e2e test-e2e-headed lint clean install wasm build-all bump-patch bump-minor bump-major man html serve
 
 BINARY := rememory
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -60,10 +60,18 @@ man: build
 
 # Generate standalone HTML files for static hosting
 html: build
-	@mkdir -p dist
-	./$(BINARY) html recover > dist/recover.html
+	@mkdir -p dist/screenshots
+	./$(BINARY) html index > dist/index.html
 	./$(BINARY) html create > dist/maker.html
-	@echo "Generated dist/recover.html and dist/maker.html"
+	./$(BINARY) html docs > dist/docs.html
+	./$(BINARY) html recover > dist/recover.html
+	@cp docs/screenshots/*.png dist/screenshots/ 2>/dev/null || true
+	@echo "Generated dist/ site"
+
+# Preview the website locally
+serve: html
+	@echo "Serving at http://localhost:8000"
+	@cd dist && python3 -m http.server 8000
 
 # Cross-compile for all platforms (used by CI)
 build-all: wasm

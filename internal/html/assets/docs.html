@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧠 ReMemory Guide - How to Create and Recover Bundles</title>
+  <meta name="description" content="Learn how to use ReMemory to create encrypted recovery bundles and recover your secrets.">
+  <style>{{STYLES}}</style>
+  <style>
+    /* Documentation page specific styles */
+    .docs-nav {
+      background: white;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .docs-nav .logo {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #2c3e50;
+      text-decoration: none;
+    }
+
+    .docs-nav .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .docs-nav .nav-links a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    .docs-nav .nav-links a:hover {
+      text-decoration: underline;
+    }
+
+    .docs-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .docs-header h1 {
+      color: #2c3e50;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .docs-header p {
+      color: #6c757d;
+    }
+
+    .toc {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    .toc h2 {
+      font-size: 1rem;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+
+    .toc ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .toc li {
+      margin-bottom: 0.5rem;
+    }
+
+    .toc a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    .toc a:hover {
+      text-decoration: underline;
+    }
+
+    .toc .indent {
+      margin-left: 1.5rem;
+    }
+
+    .doc-section {
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    .doc-section h2 {
+      color: #2c3e50;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #3498db;
+    }
+
+    .doc-section h3 {
+      color: #2c3e50;
+      font-size: 1.25rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .doc-section p {
+      color: #495057;
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+
+    .doc-section ul, .doc-section ol {
+      color: #495057;
+      line-height: 1.7;
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+
+    .doc-section li {
+      margin-bottom: 0.5rem;
+    }
+
+    .doc-section code {
+      background: #f4f4f4;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    .screenshot {
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+
+    .screenshot img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .screenshot figcaption {
+      color: #6c757d;
+      font-size: 0.9rem;
+      margin-top: 0.75rem;
+      font-style: italic;
+    }
+
+    .screenshot-placeholder {
+      background: #f8f9fa;
+      border: 2px dashed #dee2e6;
+      border-radius: 8px;
+      padding: 3rem 2rem;
+      text-align: center;
+      color: #6c757d;
+    }
+
+    .screenshot-placeholder .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .tip {
+      background: #e8f4fc;
+      border-left: 4px solid #3498db;
+      padding: 1rem 1.5rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0;
+    }
+
+    .tip strong {
+      color: #2980b9;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 1rem 1.5rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0;
+    }
+
+    .warning strong {
+      color: #856404;
+    }
+
+    .step-guide {
+      display: flex;
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+      align-items: flex-start;
+    }
+
+    .step-guide .step-number {
+      background: #3498db;
+      color: white;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .step-guide .step-content {
+      flex: 1;
+    }
+
+    .step-guide .step-content h4 {
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+    }
+
+    .bundle-contents {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    .bundle-contents .file {
+      display: flex;
+      gap: 1rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .bundle-contents .file:last-child {
+      border-bottom: none;
+    }
+
+    .bundle-contents .file-name {
+      color: #2c3e50;
+      font-weight: 500;
+    }
+
+    .bundle-contents .file-desc {
+      color: #6c757d;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    @media (max-width: 600px) {
+      .step-guide {
+        flex-direction: column;
+      }
+
+      .docs-nav {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="docs-nav">
+      <a href="index.html" class="logo">🧠 ReMemory</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="maker.html">Create Bundles</a>
+        <a href="https://github.com/eljojo/rememory" target="_blank">GitHub</a>
+      </div>
+    </nav>
+
+    <header class="docs-header">
+      <h1>🧠 ReMemory User Guide</h1>
+      <p>Learn how to create encrypted recovery bundles and recover your secrets</p>
+    </header>
+
+    <nav class="toc">
+      <h2>Contents</h2>
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#creating">Creating Bundles</a></li>
+        <li class="indent"><a href="#step1">Step 1: Add Friends</a></li>
+        <li class="indent"><a href="#step2">Step 2: Add Files</a></li>
+        <li class="indent"><a href="#step3">Step 3: Generate Bundles</a></li>
+        <li class="indent"><a href="#distributing">Distributing to Friends</a></li>
+        <li><a href="#recovering">Recovering Files</a></li>
+        <li class="indent"><a href="#bundle-contents">What Friends Receive</a></li>
+        <li class="indent"><a href="#recovery-process">Recovery Process</a></li>
+        <li><a href="#best-practices">Best Practices</a></li>
+        <li><a href="#cli">CLI Alternative</a></li>
+      </ul>
+    </nav>
+
+    <section id="overview" class="doc-section">
+      <h2>Overview</h2>
+      <p>
+        ReMemory helps you protect important files (passwords, crypto keys, documents) by:
+      </p>
+      <ol>
+        <li>Encrypting your files with strong cryptography (age encryption)</li>
+        <li>Splitting the decryption key among trusted friends using Shamir's Secret Sharing</li>
+        <li>Creating self-contained bundles that friends can use to recover your secrets</li>
+      </ol>
+      <p>
+        The key innovation is that recovery works <strong>entirely offline in a browser</strong>—no servers,
+        no internet, no need for this website to exist when recovery happens.
+      </p>
+
+      <div class="tip">
+        <strong>Tip:</strong> No single friend can access your data alone. They must work together,
+        combining their shares to reach the threshold you set (e.g., 3 of 5 friends).
+      </div>
+    </section>
+
+    <section id="creating" class="doc-section">
+      <h2>Creating Bundles</h2>
+      <p>
+        Creating bundles is a 3-step process. Everything happens in your browser—your files never
+        leave your device.
+      </p>
+
+      <h3 id="step1">Step 1: Add Friends</h3>
+      <p>
+        Start by adding the friends who will hold pieces of your recovery key. For each friend,
+        provide their name, email, and optionally phone number.
+      </p>
+
+      <figure class="screenshot">
+        <img src="screenshots/friends.png" alt="Adding friends in Step 1" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: Adding friends form</div>'">
+        <figcaption>Add at least 2 friends who will hold shares of your recovery key</figcaption>
+      </figure>
+
+      <p>
+        Then choose your <strong>threshold</strong>—how many friends must cooperate to recover your files.
+      </p>
+
+      <div class="tip">
+        <strong>Choosing the right threshold:</strong>
+        <ul>
+          <li><strong>3 friends, threshold 2:</strong> Minimum viable setup</li>
+          <li><strong>5 friends, threshold 3:</strong> Good balance of security and availability</li>
+          <li><strong>7 friends, threshold 4-5:</strong> Higher security, requires more coordination</li>
+        </ul>
+        Set threshold high enough that casual collusion is unlikely, but low enough that recovery
+        is possible if 1-2 friends are unavailable.
+      </div>
+
+      <h3 id="step2">Step 2: Add Files</h3>
+      <p>
+        Drag and drop files or a folder containing the secrets you want to protect.
+      </p>
+
+      <figure class="screenshot">
+        <img src="screenshots/files.png" alt="Adding files in Step 2" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: File upload area</div>'">
+        <figcaption>Drag and drop files or folders to protect</figcaption>
+      </figure>
+
+      <p><strong>Good candidates for ReMemory:</strong></p>
+      <ul>
+        <li>Password manager recovery codes</li>
+        <li>Cryptocurrency seeds/keys</li>
+        <li>Important account credentials</li>
+        <li>Instructions for loved ones</li>
+        <li>Legal document locations</li>
+        <li>Safe combinations</li>
+      </ul>
+
+      <div class="warning">
+        <strong>Note:</strong> Avoid files that change frequently. ReMemory is designed for
+        static secrets that you set and forget.
+      </div>
+
+      <h3 id="step3">Step 3: Generate Bundles</h3>
+      <p>
+        Click "Generate Bundles" to encrypt your files and create personalized bundles for each friend.
+      </p>
+
+      <figure class="screenshot">
+        <img src="screenshots/bundles.png" alt="Generating bundles in Step 3" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: Bundle generation</div>'">
+        <figcaption>Download individual bundles or all at once</figcaption>
+      </figure>
+
+      <p>
+        Each bundle is approximately 5 MB because it includes the complete recovery tool.
+        This ensures friends can recover your files even if this website no longer exists.
+      </p>
+
+      <h3 id="distributing">Distributing to Friends</h3>
+      <p>Send each friend their specific bundle using any method you trust:</p>
+      <ul>
+        <li><strong>Email:</strong> Attach the ZIP file</li>
+        <li><strong>Cloud storage:</strong> Share via Dropbox, Google Drive, etc.</li>
+        <li><strong>USB drive:</strong> Physical handoff</li>
+        <li><strong>Encrypted messaging:</strong> Signal, WhatsApp, etc.</li>
+      </ul>
+
+      <div class="tip">
+        <strong>Tell your friends:</strong>
+        <ol>
+          <li>Keep the bundle somewhere safe (cloud backup, USB drive, etc.)</li>
+          <li>They cannot use it alone—they'll need to coordinate with others</li>
+          <li>A single share reveals nothing, but they should still keep it private</li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="recovering" class="doc-section">
+      <h2>Recovering Files</h2>
+
+      <h3 id="bundle-contents">What Friends Receive</h3>
+      <p>Each bundle contains everything needed for recovery:</p>
+
+      <div class="bundle-contents">
+        <div class="file">
+          <span class="file-name">README.txt</span>
+          <span class="file-desc">Instructions + unique share + contact list</span>
+        </div>
+        <div class="file">
+          <span class="file-name">README.pdf</span>
+          <span class="file-desc">Same content, formatted for printing</span>
+        </div>
+        <div class="file">
+          <span class="file-name">MANIFEST.age</span>
+          <span class="file-desc">Your encrypted secrets</span>
+        </div>
+        <div class="file">
+          <span class="file-name">recover.html</span>
+          <span class="file-desc">Browser-based recovery tool (~1.8 MB)</span>
+        </div>
+      </div>
+
+      <p style="margin-top: 1rem;">
+        Each bundle is personalized: the <code>recover.html</code> has the friend's share pre-loaded
+        and shows a contact list of other friends who hold shares.
+      </p>
+
+      <h3 id="recovery-process">Recovery Process</h3>
+      <p>
+        When your friends need to recover your secrets, here's what they do:
+      </p>
+
+      <div class="step-guide">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h4>Open recover.html</h4>
+          <p>One friend opens the recovery tool from their bundle in any modern browser. Their share is automatically pre-loaded.</p>
+        </div>
+      </div>
+
+      <div class="step-guide">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h4>Load the encrypted manifest</h4>
+          <p>Drag and drop <code>MANIFEST.age</code> from the bundle onto the manifest area.</p>
+        </div>
+      </div>
+
+      <div class="step-guide">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h4>Coordinate with other friends</h4>
+          <p>The tool shows a contact list with other friends' names, emails, and phone numbers. Reach out and ask them to send their <code>README.txt</code> file.</p>
+        </div>
+      </div>
+
+      <div class="step-guide">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h4>Add shares from other friends</h4>
+          <p>Drag and drop their <code>README.txt</code> files onto the page, or paste share text directly. A checkmark appears next to each friend's name as their share is added.</p>
+        </div>
+      </div>
+
+      <div class="step-guide">
+        <div class="step-number">5</div>
+        <div class="step-content">
+          <h4>Recovery happens automatically</h4>
+          <p>Once the threshold is met (e.g., 3 of 5 shares), decryption starts immediately—no button to click!</p>
+        </div>
+      </div>
+
+      <figure class="screenshot">
+        <img src="screenshots/recovery-1.png" alt="Recovery interface - collecting shares" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: Recovery process</div>'">
+        <figcaption>The recovery tool showing collected shares and contact list</figcaption>
+      </figure>
+
+      <figure class="screenshot">
+        <img src="screenshots/recovery-2.png" alt="Recovery interface - decryption complete" onerror="this.parentElement.innerHTML='<div class=\'screenshot-placeholder\'><div class=\'icon\'>📸</div>Screenshot: Recovery complete</div>'">
+        <figcaption>Once threshold is met, files are decrypted and ready to download</figcaption>
+      </figure>
+
+      <div class="tip">
+        <strong>Key points about recovery:</strong>
+        <ul>
+          <li>Works completely offline—no internet required</li>
+          <li>No data leaves the browser</li>
+          <li>Works on Chrome, Firefox, Safari, Edge</li>
+          <li>Friends can be in different locations; they just share their README.txt files</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="best-practices" class="doc-section">
+      <h2>Best Practices</h2>
+
+      <h3>Choosing Friends</h3>
+      <ul>
+        <li><strong>Longevity:</strong> Pick people likely to be reachable in 5-10+ years</li>
+        <li><strong>Geographic diversity:</strong> Don't put all friends in the same disaster zone</li>
+        <li><strong>Technical ability:</strong> Mix is fine; the tool is designed for everyone</li>
+        <li><strong>Relationships:</strong> Consider if they'll cooperate with each other</li>
+        <li><strong>Trust:</strong> While a single share reveals nothing, you're trusting them with responsibility</li>
+      </ul>
+
+      <h3>Security Considerations</h3>
+      <ul>
+        <li>Don't keep all bundles together—that defeats the purpose of splitting</li>
+        <li>Consider printing <code>README.pdf</code>—paper backups survive digital disasters</li>
+        <li>Save <code>project.yml</code> if you want to regenerate bundles later</li>
+      </ul>
+
+      <h3>Rotation</h3>
+      <p>
+        Consider creating new bundles every 2-3 years:
+      </p>
+      <ul>
+        <li>Friends' contact info changes</li>
+        <li>You may want to update secrets</li>
+        <li>Relationships change</li>
+        <li>New cryptographic best practices emerge</li>
+      </ul>
+    </section>
+
+    <section id="cli" class="doc-section">
+      <h2>CLI Alternative</h2>
+      <p>
+        ReMemory also offers a command-line tool for advanced users who prefer working in a terminal
+        or need to automate bundle creation.
+      </p>
+
+      <p>
+        <a href="{{GITHUB_URL}}" class="btn btn-secondary">Download CLI from GitHub</a>
+      </p>
+
+      <p style="margin-top: 1rem;">
+        The CLI provides the same functionality plus features like importing contacts from
+        a <code>project.yml</code> file and batch operations.
+      </p>
+    </section>
+  </div>
+
+  <footer>
+    <p>ReMemory {{VERSION}}</p>
+    <p>
+      <a href="https://github.com/eljojo/rememory" target="_blank">Source Code</a> ·
+      <a href="{{GITHUB_URL}}" target="_blank">Download CLI</a> ·
+      <a href="index.html">Home</a>
+    </p>
+  </footer>
+</body>
+</html>
