@@ -222,19 +222,19 @@ friends:
     await creation.open();
 
     // Default should be English
-    await creation.expectTitle('ReMemory - Create Bundles');
+    await creation.expectPageTitle('Create Bundles');
 
     // Switch to Spanish
     await creation.setLanguage('es');
-    await creation.expectTitle('ReMemory - Guarda lo Importante');
+    await creation.expectPageTitle('Crear Sobres');
 
     // Switch to German
     await creation.setLanguage('de');
-    await creation.expectTitle('ReMemory — Bewahre das Wichtige');
+    await creation.expectPageTitle('Umschläge erstellen');
 
     // Switch back to English
     await creation.setLanguage('en');
-    await creation.expectTitle('ReMemory - Create Bundles');
+    await creation.expectPageTitle('Create Bundles');
   });
 
   test('minimum 2 friends required', async ({ page }) => {

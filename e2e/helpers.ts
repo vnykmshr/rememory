@@ -332,13 +332,13 @@ export class CreationPage {
 
   // UI assertions
   async expectUIElements(): Promise<void> {
-    await expect(this.page.locator('h1')).toContainText('ReMemory');
+    await expect(this.page.locator('.logo')).toContainText('ReMemory');
     await expect(this.page.locator('#friends-list')).toBeVisible();
     await expect(this.page.locator('#files-drop-zone')).toBeVisible();
     await expect(this.page.locator('#generate-btn')).toBeVisible();
   }
 
-  async expectTitle(title: string): Promise<void> {
+  async expectPageTitle(title: string): Promise<void> {
     await expect(this.page.locator('h1')).toContainText(title);
   }
 
