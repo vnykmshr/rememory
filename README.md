@@ -12,7 +12,7 @@ Each friend receives a bundle containing `recover.html`—a self-contained recov
 
 Your friends can recover your secrets with nothing but a web browser and their bundles. That's it.
 
-**[Download demo bundles](https://github.com/eljojo/rememory/releases/download/v0.0.3/demo-bundles.zip)** to try the recovery tool yourself. See the **[User Guide](docs/guide.md)** for a complete tutorial.
+You can [use the **web version**](https://eljojo.github.io/rememory/). **[Download demo bundles](https://github.com/eljojo/rememory/releases/download/v0.0.3/demo-bundles.zip)** to try the recovery tool yourself. See the **[User Guide](docs/guide.md)** for a complete tutorial.
 
 ```mermaid
 graph TB
