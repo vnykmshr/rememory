@@ -43,6 +43,7 @@ type CreateBundlesConfig struct {
 	Files       []FileEntry
 	Version     string
 	GitHubURL   string
+	Anonymous   bool
 }
 
 // BundleOutput represents a generated bundle for JavaScript.
@@ -68,6 +69,7 @@ func createBundlesJS(this js.Value, args []js.Value) any {
 		Threshold:   configJS.Get("threshold").Int(),
 		Version:     configJS.Get("version").String(),
 		GitHubURL:   configJS.Get("githubURL").String(),
+		Anonymous:   configJS.Get("anonymous").Bool(),
 	}
 
 	// Parse friends array
@@ -145,12 +147,12 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 		return nil, fmt.Errorf("no files provided")
 	}
 
-	// Validate friends
+	// Validate friends (email not required for anonymous mode)
 	for i, f := range config.Friends {
 		if f.Name == "" {
 			return nil, fmt.Errorf("friend %d: name is required", i+1)
 		}
-		if f.Email == "" {
+		if !config.Anonymous && f.Email == "" {
 			return nil, fmt.Errorf("friend %d (%s): email is required", i+1, f.Name)
 		}
 	}
@@ -223,21 +225,25 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 	for i, friend := range config.Friends {
 		share := shares[i]
 
-		// Get other friends (excluding this one)
-		otherFriends := make([]project.Friend, 0, n-1)
-		for j, f := range projectFriends {
-			if j != i {
-				otherFriends = append(otherFriends, f)
+		// Get other friends (excluding this one) - empty for anonymous mode
+		var otherFriends []project.Friend
+		var otherFriendsInfo []html.FriendInfo
+		if !config.Anonymous {
+			otherFriends = make([]project.Friend, 0, n-1)
+			for j, f := range projectFriends {
+				if j != i {
+					otherFriends = append(otherFriends, f)
+				}
 			}
-		}
 
-		// Convert to FriendInfo for HTML personalization
-		otherFriendsInfo := make([]html.FriendInfo, len(otherFriends))
-		for j, f := range otherFriends {
-			otherFriendsInfo[j] = html.FriendInfo{
-				Name:  f.Name,
-				Email: f.Email,
-				Phone: f.Phone,
+			// Convert to FriendInfo for HTML personalization
+			otherFriendsInfo = make([]html.FriendInfo, len(otherFriends))
+			for j, f := range otherFriends {
+				otherFriendsInfo[j] = html.FriendInfo{
+					Name:  f.Name,
+					Email: f.Email,
+					Phone: f.Phone,
+				}
 			}
 		}
 
@@ -265,6 +271,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			ManifestChecksum: manifestChecksum,
 			RecoverChecksum:  recoverChecksum,
 			Created:          now,
+			Anonymous:        config.Anonymous,
 		}
 		readmeContent := bundle.GenerateReadme(readmeData)
 
@@ -281,6 +288,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			ManifestChecksum: manifestChecksum,
 			RecoverChecksum:  recoverChecksum,
 			Created:          now,
+			Anonymous:        config.Anonymous,
 		}
 		pdfContent, err := pdf.GenerateReadme(pdfData)
 		if err != nil {

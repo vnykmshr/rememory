@@ -294,6 +294,9 @@
     <header class="docs-header">
       <h1>🧠 ReMemory User Guide</h1>
       <p>Learn how to create encrypted recovery bundles and recover your secrets</p>
+      <p style="font-size: 0.9rem; color: #6c757d; margin-top: 0.5rem;">
+        Prefer the command line? See the <a href="https://github.com/eljojo/rememory/blob/main/docs/guide.md">CLI guide</a>.
+      </p>
     </header>
 
     <nav class="toc">
@@ -310,6 +313,7 @@
         <li class="indent"><a href="#recovery-process">Recovery Process</a></li>
         <li><a href="#best-practices">Best Practices</a></li>
         <li><a href="#cli">CLI Alternative</a></li>
+        <li><a href="#anonymous">Advanced: Anonymous Mode</a></li>
       </ul>
     </nav>
 
@@ -568,6 +572,53 @@
         The CLI provides the same functionality plus features like importing contacts from
         a <code>project.yml</code> file and batch operations.
       </p>
+    </section>
+
+    <section id="anonymous" class="doc-section">
+      <h2>Advanced: Anonymous Mode</h2>
+      <p>
+        For situations where you don't want shareholders to know each other's identities,
+        ReMemory offers an <strong>anonymous mode</strong>. In this mode:
+      </p>
+      <ul>
+        <li>Friends are labeled generically as "Share 1", "Share 2", etc.</li>
+        <li>No contact information is collected or stored</li>
+        <li>READMEs skip the "Other Share Holders" section</li>
+        <li>Bundle filenames use numbers instead of names</li>
+      </ul>
+
+      <h3>When to Use Anonymous Mode</h3>
+      <p>Anonymous mode is useful when:</p>
+      <ul>
+        <li>You want to distribute shares to people who shouldn't know each other</li>
+        <li>You're testing the system quickly without entering contact details</li>
+        <li>You have a separate out-of-band method for coordinating recovery</li>
+        <li>Privacy is a higher priority than ease of coordination</li>
+      </ul>
+
+      <h3>How to Enable</h3>
+      <p>
+        In the <a href="maker.html">bundle creator</a>, look for the <strong>Anonymous</strong> toggle
+        in the top-right corner of the Friends section. When enabled:
+      </p>
+      <ul>
+        <li>The friend list disappears</li>
+        <li>A "Number of shares" input appears instead</li>
+        <li>Set how many shares you want and the threshold</li>
+        <li>Generated bundles will be named <code>bundle-share-1.zip</code>, <code>bundle-share-2.zip</code>, etc.</li>
+      </ul>
+
+      <h3>Recovery in Anonymous Mode</h3>
+      <p>
+        Recovery works the same way, but the contact list section won't appear in <code>recover.html</code>.
+        Share holders will see generic labels like "Share 1" instead of names.
+      </p>
+
+      <div class="warning">
+        <strong>Important:</strong> Since there's no built-in contact list in anonymous mode,
+        make sure share holders know how to reach each other (or you) when recovery is needed.
+        You'll need to coordinate through other means.
+      </div>
     </section>
   </div>
 

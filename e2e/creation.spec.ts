@@ -264,4 +264,104 @@ friends:
     // Should still have 2 friends
     await creation.expectFriendCount(2);
   });
+
+  test('anonymous mode toggle hides friends list', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+
+    // Anonymous mode should be off by default
+    await creation.expectAnonymousModeUnchecked();
+    await creation.expectFriendsListVisible();
+    await creation.expectSharesInputHidden();
+
+    // Enable anonymous mode
+    await creation.toggleAnonymousMode();
+
+    // Friends list should be hidden, shares input should be visible
+    await creation.expectAnonymousModeChecked();
+    await creation.expectFriendsListHidden();
+    await creation.expectSharesInputVisible();
+
+    // Disable anonymous mode
+    await creation.toggleAnonymousMode();
+
+    // Friends list should be visible again
+    await creation.expectAnonymousModeUnchecked();
+    await creation.expectFriendsListVisible();
+    await creation.expectSharesInputHidden();
+  });
+
+  test('anonymous mode threshold updates with share count', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+
+    // Enable anonymous mode
+    await creation.toggleAnonymousMode();
+
+    // Default 5 shares should have threshold options 2-5
+    await creation.expectNumShares(5);
+    await creation.expectThresholdOptions(['2 of 5', '3 of 5', '4 of 5', '5 of 5']);
+
+    // Change to 3 shares
+    await creation.setNumShares(3);
+    await creation.expectThresholdOptions(['2 of 3', '3 of 3']);
+
+    // Change to 7 shares
+    await creation.setNumShares(7);
+    await creation.expectThresholdOptions(['2 of 7', '3 of 7', '4 of 7', '5 of 7', '6 of 7', '7 of 7']);
+  });
+
+  test('anonymous mode full bundle creation workflow', async ({ page }, testInfo) => {
+    testInfo.setTimeout(120000);
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+
+    // Enable anonymous mode
+    await creation.toggleAnonymousMode();
+    await creation.expectSharesInputVisible();
+
+    // Set 4 shares with threshold 3
+    await creation.setNumShares(4);
+    await creation.setThreshold(3);
+
+    // Add test files
+    const testFiles = creation.createTestFiles(tmpDir, 'anon');
+    await creation.addFiles(testFiles);
+
+    // Generate bundles
+    await creation.generate();
+
+    // Should complete successfully
+    await creation.expectGenerationComplete();
+
+    // Should have 4 bundles (Share 1, Share 2, Share 3, Share 4)
+    await creation.expectBundleCount(4);
+    await creation.expectBundleFor('Share 1');
+    await creation.expectBundleFor('Share 2');
+    await creation.expectBundleFor('Share 3');
+    await creation.expectBundleFor('Share 4');
+  });
+
+  test('anonymous mode validates files required', async ({ page }) => {
+    const creation = new CreationPage(page, htmlPath);
+
+    await creation.open();
+
+    // Enable anonymous mode
+    await creation.toggleAnonymousMode();
+
+    // Don't add any files - this should fail validation
+
+    // Try to generate - should show validation error
+    await creation.generate();
+
+    // Should show validation toast for missing files
+    await expect(page.locator('.toast-warning')).toBeVisible();
+
+    // Files drop zone should be highlighted
+    await expect(page.locator('#files-drop-zone.has-error')).toBeVisible();
+  });
 });

@@ -4,8 +4,10 @@ import * as path from 'path';
 import {
   getRememoryBin,
   createTestProject,
+  createAnonymousTestProject,
   extractBundle,
   extractBundles,
+  extractAnonymousBundles,
   RecoveryPage
 } from './helpers';
 
@@ -206,5 +208,82 @@ test.describe('Browser Recovery Tool', () => {
     // Alice's share is already pre-loaded, try to add it again
     await recovery.addShares(bundleDir);
     await recovery.expectShareCount(1); // Still 1, duplicate ignored
+  });
+});
+
+test.describe('Anonymous Bundle Recovery', () => {
+  let anonProjectDir: string;
+  let anonBundlesDir: string;
+
+  test.beforeAll(async () => {
+    // Skip if rememory binary not available
+    const bin = getRememoryBin();
+    if (!fs.existsSync(bin)) {
+      console.log(`Skipping tests: rememory binary not found at ${bin}`);
+      test.skip();
+      return;
+    }
+
+    anonProjectDir = createAnonymousTestProject();
+    anonBundlesDir = path.join(anonProjectDir, 'output', 'bundles');
+  });
+
+  test.afterAll(async () => {
+    if (anonProjectDir && fs.existsSync(anonProjectDir)) {
+      fs.rmSync(anonProjectDir, { recursive: true, force: true });
+    }
+  });
+
+  test('anonymous recover.html loads and shows UI without contact list', async ({ page }) => {
+    const [share1Dir] = extractAnonymousBundles(anonBundlesDir, [1]);
+    const recovery = new RecoveryPage(page, share1Dir);
+
+    await recovery.open();
+    await recovery.expectUIElements();
+
+    // Share should be pre-loaded with synthetic name
+    await recovery.expectShareCount(1);
+    await recovery.expectShareHolder('Share 1');
+
+    // Contact list should NOT be visible for anonymous bundles
+    await expect(page.locator('#contact-list-section')).not.toBeVisible();
+  });
+
+  test('anonymous full recovery workflow', async ({ page }) => {
+    const [share1Dir, share2Dir] = extractAnonymousBundles(anonBundlesDir, [1, 2]);
+    const recovery = new RecoveryPage(page, share1Dir);
+
+    await recovery.open();
+
+    // Share 1 is pre-loaded
+    await recovery.expectShareCount(1);
+    await recovery.expectShareHolder('Share 1');
+
+    // Load manifest
+    await recovery.addManifest();
+    await recovery.expectManifestLoaded();
+
+    // Add Share 2 (triggers auto-recovery since threshold is 2)
+    await recovery.addShares(share2Dir);
+
+    // Recovery should complete automatically
+    await recovery.expectRecoveryComplete();
+    await recovery.expectFileCount(3); // secret.txt, notes.txt, README.md
+    await recovery.expectDownloadVisible();
+  });
+
+  test('anonymous recovery shows generic share labels', async ({ page }) => {
+    const [share1Dir, share2Dir] = extractAnonymousBundles(anonBundlesDir, [1, 2]);
+    const recovery = new RecoveryPage(page, share1Dir);
+
+    await recovery.open();
+
+    // Add Share 2
+    await recovery.addShares(share2Dir);
+
+    // Both shares should be visible with synthetic names
+    await recovery.expectShareCount(2);
+    await recovery.expectShareHolder('Share 1');
+    await recovery.expectShareHolder('Share 2');
   });
 });

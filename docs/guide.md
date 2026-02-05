@@ -2,6 +2,8 @@
 
 This guide walks you through using ReMemory to create encrypted recovery bundles for your trusted friends.
 
+> **Prefer a browser?** This guide focuses on the CLI tool. If you'd rather create bundles in your browser without installing anything, see the [web-based guide](https://eljojo.github.io/rememory/docs.html).
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -17,6 +19,7 @@ This guide walks you through using ReMemory to create encrypted recovery bundles
 - [Best Practices](#best-practices)
 - [Project Structure](#project-structure)
 - [Commands Reference](#commands-reference)
+- [Advanced: Anonymous Mode](#advanced-anonymous-mode)
 
 ## Overview
 
@@ -449,3 +452,57 @@ For detailed help on any command:
 ```bash
 rememory <command> --help
 ```
+
+## Advanced: Anonymous Mode
+
+For situations where you don't want shareholders to know each other's identities, ReMemory offers an **anonymous mode**. In this mode:
+
+- Friends are labeled generically as "Share 1", "Share 2", etc.
+- No contact information is collected or stored
+- READMEs skip the "Other Share Holders" section
+- Bundle filenames use numbers instead of names (`bundle-share-1.zip`, etc.)
+
+### When to Use Anonymous Mode
+
+Anonymous mode is useful when:
+- You want to distribute shares to people who shouldn't know each other
+- You're testing the system quickly without entering contact details
+- You have a separate out-of-band method for coordinating recovery
+- Privacy is a higher priority than ease of coordination
+
+### Creating an Anonymous Project
+
+```bash
+# Create an anonymous project with 5 shares, threshold 3
+rememory init my-recovery --anonymous --shares 5 --threshold 3
+```
+
+You can also run it interactively:
+
+```bash
+rememory init my-recovery --anonymous
+# Prompts: How many shares? and What threshold?
+```
+
+The resulting `project.yml` will look like:
+
+```yaml
+name: my-recovery
+threshold: 3
+anonymous: true
+friends:
+  - name: Share 1
+  - name: Share 2
+  - name: Share 3
+  - name: Share 4
+  - name: Share 5
+```
+
+### Recovery in Anonymous Mode
+
+Recovery works the same way, but:
+- The contact list section won't appear in `recover.html`
+- Share holders will need to coordinate through other means
+- Shares show generic labels like "Share 1" instead of names
+
+Since there's no built-in contact list, make sure share holders know how to reach each other (or you) when recovery is needed.

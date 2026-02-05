@@ -52,21 +52,25 @@ func GenerateAll(p *project.Project, cfg Config) error {
 	for i, friend := range p.Friends {
 		share := shares[i]
 
-		// Get other friends (excluding this one)
-		otherFriends := make([]project.Friend, 0, len(p.Friends)-1)
-		for j, f := range p.Friends {
-			if j != i {
-				otherFriends = append(otherFriends, f)
+		// Get other friends (excluding this one) - empty for anonymous mode
+		var otherFriends []project.Friend
+		var otherFriendsInfo []html.FriendInfo
+		if !p.Anonymous {
+			otherFriends = make([]project.Friend, 0, len(p.Friends)-1)
+			for j, f := range p.Friends {
+				if j != i {
+					otherFriends = append(otherFriends, f)
+				}
 			}
-		}
 
-		// Convert to FriendInfo for HTML personalization
-		otherFriendsInfo := make([]html.FriendInfo, len(otherFriends))
-		for j, f := range otherFriends {
-			otherFriendsInfo[j] = html.FriendInfo{
-				Name:  f.Name,
-				Email: f.Email,
-				Phone: f.Phone,
+			// Convert to FriendInfo for HTML personalization
+			otherFriendsInfo = make([]html.FriendInfo, len(otherFriends))
+			for j, f := range otherFriends {
+				otherFriendsInfo[j] = html.FriendInfo{
+					Name:  f.Name,
+					Email: f.Email,
+					Phone: f.Phone,
+				}
 			}
 		}
 
@@ -90,6 +94,7 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			Share:            share,
 			OtherFriends:     otherFriends,
 			Threshold:        p.Threshold,
+			Total:            len(p.Friends),
 			ManifestData:     manifestData,
 			ManifestChecksum: manifestChecksum,
 			RecoverHTML:      recoverHTML,
@@ -97,6 +102,7 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			Version:          cfg.Version,
 			GitHubReleaseURL: cfg.GitHubReleaseURL,
 			SealedAt:         p.Sealed.At,
+			Anonymous:        p.Anonymous,
 		})
 		if err != nil {
 			return fmt.Errorf("generating bundle for %s: %w", friend.Name, err)
@@ -119,6 +125,7 @@ type BundleParams struct {
 	Share            *core.Share
 	OtherFriends     []project.Friend
 	Threshold        int
+	Total            int
 	ManifestData     []byte
 	ManifestChecksum string
 	RecoverHTML      string
@@ -126,6 +133,7 @@ type BundleParams struct {
 	Version          string
 	GitHubReleaseURL string
 	SealedAt         time.Time
+	Anonymous        bool
 }
 
 // GenerateBundle creates a single bundle ZIP file for one friend.
@@ -137,12 +145,13 @@ func GenerateBundle(params BundleParams) error {
 		Share:            params.Share,
 		OtherFriends:     params.OtherFriends,
 		Threshold:        params.Threshold,
-		Total:            len(params.OtherFriends) + 1,
+		Total:            params.Total,
 		Version:          params.Version,
 		GitHubReleaseURL: params.GitHubReleaseURL,
 		ManifestChecksum: params.ManifestChecksum,
 		RecoverChecksum:  params.RecoverChecksum,
 		Created:          params.SealedAt,
+		Anonymous:        params.Anonymous,
 	}
 
 	// Generate README.txt
@@ -155,12 +164,13 @@ func GenerateBundle(params BundleParams) error {
 		Share:            readmeData.Share,
 		OtherFriends:     readmeData.OtherFriends,
 		Threshold:        readmeData.Threshold,
-		Total:            readmeData.Total,
+		Total:            params.Total,
 		Version:          readmeData.Version,
 		GitHubReleaseURL: readmeData.GitHubReleaseURL,
 		ManifestChecksum: readmeData.ManifestChecksum,
 		RecoverChecksum:  readmeData.RecoverChecksum,
 		Created:          readmeData.Created,
+		Anonymous:        readmeData.Anonymous,
 	})
 	if err != nil {
 		return fmt.Errorf("generating PDF: %w", err)

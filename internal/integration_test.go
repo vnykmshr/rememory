@@ -3,6 +3,7 @@ package integration_test
 import (
 	"archive/zip"
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -713,4 +714,262 @@ func extractManifestFromBundle(t *testing.T, bundlePath string) []byte {
 	}
 	t.Fatal("MANIFEST.age not found in bundle")
 	return nil
+}
+
+// TestAnonymousBundleGeneration tests bundle generation for anonymous projects
+func TestAnonymousBundleGeneration(t *testing.T) {
+	baseDir := t.TempDir()
+	projectDir := filepath.Join(baseDir, "test-anon-project")
+
+	// Create anonymous project with 5 shares, threshold 3
+	p, err := project.NewAnonymous(projectDir, "test-anon", 3, 5)
+	if err != nil {
+		t.Fatalf("creating anonymous project: %v", err)
+	}
+
+	// Verify project is anonymous
+	if !p.Anonymous {
+		t.Fatal("project should be anonymous")
+	}
+
+	// Add secret content
+	secretContent := "Anonymous mode secret: the treasure is hidden"
+	secretFile := filepath.Join(p.ManifestPath(), "secrets.txt")
+	if err := os.WriteFile(secretFile, []byte(secretContent), 0644); err != nil {
+		t.Fatalf("writing secret: %v", err)
+	}
+
+	// Seal the project
+	var archiveBuf bytes.Buffer
+	if _, err := manifest.Archive(&archiveBuf, p.ManifestPath()); err != nil {
+		t.Fatalf("archiving: %v", err)
+	}
+
+	passphrase, err := crypto.GeneratePassphrase(crypto.DefaultPassphraseBytes)
+	if err != nil {
+		t.Fatalf("generating passphrase: %v", err)
+	}
+
+	// Create output directories
+	os.MkdirAll(p.OutputPath(), 0755)
+	os.MkdirAll(p.SharesPath(), 0755)
+
+	// Encrypt manifest
+	manifestFile, _ := os.Create(p.ManifestAgePath())
+	core.Encrypt(manifestFile, bytes.NewReader(archiveBuf.Bytes()), passphrase)
+	manifestFile.Close()
+
+	// Split passphrase and write shares
+	shares, _ := core.Split([]byte(passphrase), len(p.Friends), p.Threshold)
+	shareInfos := make([]project.ShareInfo, len(p.Friends))
+	for i, data := range shares {
+		share := core.NewShare(i+1, len(p.Friends), p.Threshold, p.Friends[i].Name, data)
+		sharePath := filepath.Join(p.SharesPath(), share.Filename())
+		os.WriteFile(sharePath, []byte(share.Encode()), 0644)
+		shareInfos[i] = project.ShareInfo{
+			Friend:   p.Friends[i].Name,
+			File:     share.Filename(),
+			Checksum: share.Checksum,
+		}
+	}
+
+	// Mark project as sealed
+	manifestData, _ := os.ReadFile(p.ManifestAgePath())
+	p.Sealed = &project.Sealed{
+		At:               time.Now(),
+		ManifestChecksum: core.HashBytes(manifestData),
+		VerificationHash: core.HashString(passphrase),
+		Shares:           shareInfos,
+	}
+	p.Save()
+
+	// Generate bundles
+	fakeWASM := []byte("fake-wasm")
+	cfg := bundle.Config{
+		Version:          "v1.0.0-test",
+		GitHubReleaseURL: "https://example.com",
+		WASMBytes:        fakeWASM,
+	}
+	if err := bundle.GenerateAll(p, cfg); err != nil {
+		t.Fatalf("generating bundles: %v", err)
+	}
+
+	// Verify bundles were created with correct names
+	bundlesDir := filepath.Join(p.OutputPath(), "bundles")
+	for i := 1; i <= 5; i++ {
+		bundleName := fmt.Sprintf("bundle-share-%d.zip", i)
+		bundlePath := filepath.Join(bundlesDir, bundleName)
+
+		if _, err := os.Stat(bundlePath); os.IsNotExist(err) {
+			t.Errorf("bundle %s not found", bundleName)
+			continue
+		}
+
+		// Verify bundle contents
+		t.Run(bundleName, func(t *testing.T) {
+			verifyAnonymousBundle(t, bundlePath, i, 5, 3)
+		})
+	}
+}
+
+func verifyAnonymousBundle(t *testing.T, bundlePath string, shareNum, total, threshold int) {
+	t.Helper()
+
+	r, err := zip.OpenReader(bundlePath)
+	if err != nil {
+		t.Fatalf("opening bundle: %v", err)
+	}
+	defer r.Close()
+
+	var readmeContent string
+	for _, f := range r.File {
+		if f.Name == "README.txt" {
+			rc, _ := f.Open()
+			data, _ := io.ReadAll(rc)
+			rc.Close()
+			readmeContent = string(data)
+			break
+		}
+	}
+
+	if readmeContent == "" {
+		t.Fatal("README.txt not found")
+	}
+
+	// Anonymous READMEs should NOT contain "OTHER SHARE HOLDERS" section
+	if strings.Contains(readmeContent, "OTHER SHARE HOLDERS") {
+		t.Error("anonymous README should not contain OTHER SHARE HOLDERS section")
+	}
+
+	// Should contain anonymous-specific warning text
+	if !strings.Contains(readmeContent, "combine this with other shares") {
+		t.Error("anonymous README should mention combining with other shares")
+	}
+
+	// Should NOT contain "friends listed below"
+	if strings.Contains(readmeContent, "friends listed below") {
+		t.Error("anonymous README should not mention friends listed below")
+	}
+
+	// Should contain correct threshold info
+	thresholdText := fmt.Sprintf("At least %d of you must cooperate", threshold)
+	if !strings.Contains(readmeContent, thresholdText) {
+		t.Errorf("README should contain threshold info: %s", thresholdText)
+	}
+
+	totalText := fmt.Sprintf("one of %d trusted friends", total)
+	if !strings.Contains(readmeContent, totalText) {
+		t.Errorf("README should contain total info: %s", totalText)
+	}
+
+	// Parse and verify share
+	share, err := core.ParseShare([]byte(readmeContent))
+	if err != nil {
+		t.Fatalf("parsing share: %v", err)
+	}
+
+	expectedHolder := fmt.Sprintf("Share %d", shareNum)
+	if share.Holder != expectedHolder {
+		t.Errorf("holder: got %q, want %q", share.Holder, expectedHolder)
+	}
+
+	if err := share.Verify(); err != nil {
+		t.Errorf("share verification failed: %v", err)
+	}
+}
+
+// TestAnonymousBundleRecovery tests recovery from anonymous bundles
+func TestAnonymousBundleRecovery(t *testing.T) {
+	baseDir := t.TempDir()
+	projectDir := filepath.Join(baseDir, "test-anon-recovery")
+
+	// Create anonymous project
+	p, err := project.NewAnonymous(projectDir, "test-recovery", 2, 3)
+	if err != nil {
+		t.Fatalf("creating project: %v", err)
+	}
+
+	// Add secret content
+	secretContent := "The secret is: anonymous-mode-works"
+	secretFile := filepath.Join(p.ManifestPath(), "secret.txt")
+	os.WriteFile(secretFile, []byte(secretContent), 0644)
+
+	// Seal
+	var archiveBuf bytes.Buffer
+	manifest.Archive(&archiveBuf, p.ManifestPath())
+	passphrase, _ := crypto.GeneratePassphrase(crypto.DefaultPassphraseBytes)
+
+	os.MkdirAll(p.OutputPath(), 0755)
+	os.MkdirAll(p.SharesPath(), 0755)
+
+	manifestFile, _ := os.Create(p.ManifestAgePath())
+	core.Encrypt(manifestFile, bytes.NewReader(archiveBuf.Bytes()), passphrase)
+	manifestFile.Close()
+
+	shares, _ := core.Split([]byte(passphrase), len(p.Friends), p.Threshold)
+	shareInfos := make([]project.ShareInfo, len(p.Friends))
+	for i, data := range shares {
+		share := core.NewShare(i+1, len(p.Friends), p.Threshold, p.Friends[i].Name, data)
+		sharePath := filepath.Join(p.SharesPath(), share.Filename())
+		os.WriteFile(sharePath, []byte(share.Encode()), 0644)
+		shareInfos[i] = project.ShareInfo{
+			Friend:   p.Friends[i].Name,
+			File:     share.Filename(),
+			Checksum: share.Checksum,
+		}
+	}
+
+	manifestData, _ := os.ReadFile(p.ManifestAgePath())
+	p.Sealed = &project.Sealed{
+		At:               time.Now(),
+		ManifestChecksum: core.HashBytes(manifestData),
+		VerificationHash: core.HashString(passphrase),
+		Shares:           shareInfos,
+	}
+	p.Save()
+
+	// Generate bundles
+	fakeWASM := []byte("fake-wasm")
+	cfg := bundle.Config{
+		Version:          "v1.0.0",
+		GitHubReleaseURL: "https://example.com",
+		WASMBytes:        fakeWASM,
+	}
+	bundle.GenerateAll(p, cfg)
+
+	// Recover using bundles
+	bundlesDir := filepath.Join(p.OutputPath(), "bundles")
+	bundle1 := filepath.Join(bundlesDir, "bundle-share-1.zip")
+	bundle2 := filepath.Join(bundlesDir, "bundle-share-2.zip")
+
+	share1 := extractShareFromBundle(t, bundle1)
+	share2 := extractShareFromBundle(t, bundle2)
+	bundleManifest := extractManifestFromBundle(t, bundle1)
+
+	// Combine shares
+	recoveredPass, err := core.Combine([][]byte{share1.Data, share2.Data})
+	if err != nil {
+		t.Fatalf("combining shares: %v", err)
+	}
+
+	// Decrypt
+	var decrypted bytes.Buffer
+	if err := core.Decrypt(&decrypted, bytes.NewReader(bundleManifest), string(recoveredPass)); err != nil {
+		t.Fatalf("decrypting: %v", err)
+	}
+
+	// Extract and verify
+	extractDir := t.TempDir()
+	extractResult, err := manifest.Extract(&decrypted, extractDir)
+	if err != nil {
+		t.Fatalf("extracting: %v", err)
+	}
+
+	recovered, err := os.ReadFile(filepath.Join(extractResult.Path, "secret.txt"))
+	if err != nil {
+		t.Fatalf("reading recovered: %v", err)
+	}
+	if string(recovered) != secretContent {
+		t.Errorf("content mismatch: got %q, want %q", recovered, secretContent)
+	}
 }

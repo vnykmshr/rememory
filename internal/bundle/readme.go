@@ -22,6 +22,7 @@ type ReadmeData struct {
 	ManifestChecksum string
 	RecoverChecksum  string
 	Created          time.Time
+	Anonymous        bool
 }
 
 // GenerateReadme creates the README.txt content with all embedded information.
@@ -36,7 +37,11 @@ func GenerateReadme(data ReadmeData) string {
 
 	// Warnings
 	sb.WriteString("!!  YOU CANNOT USE THIS FILE ALONE\n")
-	sb.WriteString("    You will need help from other friends listed below.\n\n")
+	if data.Anonymous {
+		sb.WriteString("    You will need to combine this with other shares.\n\n")
+	} else {
+		sb.WriteString("    You will need help from other friends listed below.\n\n")
+	}
 	sb.WriteString("!!  CONFIDENTIAL - DO NOT SHARE THIS FILE\n")
 	sb.WriteString("    This document contains your secret share. Keep it safe.\n\n")
 
@@ -55,17 +60,19 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString(fmt.Sprintf("You are one of %d trusted friends who hold pieces of the recovery key.\n", data.Total))
 	sb.WriteString(fmt.Sprintf("At least %d of you must cooperate to decrypt the contents.\n\n", data.Threshold))
 
-	// Other share holders - right after What is this
-	sb.WriteString("--------------------------------------------------------------------------------\n")
-	sb.WriteString("OTHER SHARE HOLDERS (contact to coordinate recovery)\n")
-	sb.WriteString("--------------------------------------------------------------------------------\n")
-	for _, friend := range data.OtherFriends {
-		sb.WriteString(fmt.Sprintf("%s\n", friend.Name))
-		sb.WriteString(fmt.Sprintf("  Email: %s\n", friend.Email))
-		if friend.Phone != "" {
-			sb.WriteString(fmt.Sprintf("  Phone: %s\n", friend.Phone))
+	// Other share holders - right after What is this (skip for anonymous mode)
+	if !data.Anonymous {
+		sb.WriteString("--------------------------------------------------------------------------------\n")
+		sb.WriteString("OTHER SHARE HOLDERS (contact to coordinate recovery)\n")
+		sb.WriteString("--------------------------------------------------------------------------------\n")
+		for _, friend := range data.OtherFriends {
+			sb.WriteString(fmt.Sprintf("%s\n", friend.Name))
+			sb.WriteString(fmt.Sprintf("  Email: %s\n", friend.Email))
+			if friend.Phone != "" {
+				sb.WriteString(fmt.Sprintf("  Phone: %s\n", friend.Phone))
+			}
+			sb.WriteString("\n")
 		}
-		sb.WriteString("\n")
 	}
 
 	// Primary method - Browser
@@ -77,14 +84,22 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString("2. Load the encrypted file (MANIFEST.age) from this bundle:\n")
 	sb.WriteString("   - Drag and drop it onto the manifest area, OR\n")
 	sb.WriteString("   - Click to browse and select it\n\n")
-	sb.WriteString("3. You'll see a contact list showing other friends who hold shares\n")
-	sb.WriteString("   Contact them and ask them to send you their README.txt file\n\n")
-	sb.WriteString("4. For each friend's README.txt you receive:\n")
-	sb.WriteString("   - Drag and drop it onto the page, OR\n")
-	sb.WriteString("   - Click the clipboard button to paste their share text\n\n")
-	sb.WriteString("5. As you add shares, checkmarks appear next to each friend's name\n")
-	sb.WriteString(fmt.Sprintf("   Once you have %d shares total, recovery happens AUTOMATICALLY\n\n", data.Threshold))
-	sb.WriteString("6. Download the recovered files\n\n")
+	if data.Anonymous {
+		sb.WriteString("3. Add other shares as you receive them\n")
+		sb.WriteString("   - Drag and drop README.txt files onto the page, OR\n")
+		sb.WriteString("   - Click the clipboard button to paste share text\n\n")
+		sb.WriteString(fmt.Sprintf("4. Once you have %d shares total, recovery happens AUTOMATICALLY\n\n", data.Threshold))
+		sb.WriteString("5. Download the recovered files\n\n")
+	} else {
+		sb.WriteString("3. You'll see a contact list showing other friends who hold shares\n")
+		sb.WriteString("   Contact them and ask them to send you their README.txt file\n\n")
+		sb.WriteString("4. For each friend's README.txt you receive:\n")
+		sb.WriteString("   - Drag and drop it onto the page, OR\n")
+		sb.WriteString("   - Click the clipboard button to paste their share text\n\n")
+		sb.WriteString("5. As you add shares, checkmarks appear next to each friend's name\n")
+		sb.WriteString(fmt.Sprintf("   Once you have %d shares total, recovery happens AUTOMATICALLY\n\n", data.Threshold))
+		sb.WriteString("6. Download the recovered files\n\n")
+	}
 	sb.WriteString("Works completely offline - no internet required!\n\n")
 
 	// Fallback method - CLI

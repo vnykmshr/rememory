@@ -221,6 +221,56 @@
       margin-left: auto;
     }
 
+    /* Card header with title and anonymous toggle */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .card-header h2 {
+      margin-bottom: 0;
+    }
+    .anonymous-toggle {
+      font-size: 0.8rem;
+      color: #6c757d;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .anonymous-toggle input {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+    .anonymous-toggle:hover {
+      color: #495057;
+    }
+
+    /* Anonymous mode shares input */
+    .shares-input {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+    .shares-input label {
+      font-size: 0.875rem;
+      color: #495057;
+    }
+    .shares-input input {
+      width: 60px;
+      padding: 0.375rem 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      text-align: center;
+    }
+
     /* Maker intro */
     .maker-intro {
       background: white;
@@ -361,14 +411,29 @@
 
     <!-- Step 1: Friends -->
     <div class="card">
-      <h2><span class="step-number">1</span> <span data-i18n="step1_title">Friends</span></h2>
-      <p class="hint" data-i18n="friends_hint">Add at least 2 friends who will hold pieces of your recovery key</p>
+      <div class="card-header">
+        <h2><span class="step-number">1</span> <span data-i18n="step1_title">Friends</span></h2>
+        <label class="anonymous-toggle">
+          <input type="checkbox" id="anonymous-mode">
+          <span data-i18n="anonymous_label">Anonymous</span>
+        </label>
+      </div>
+      <p class="hint" id="friends-hint" data-i18n="friends_hint">Add at least 2 friends who will hold pieces of your recovery key</p>
 
-      <div id="friends-list"></div>
+      <!-- Anonymous mode: shares input -->
+      <div id="shares-input" class="shares-input hidden">
+        <label for="num-shares" data-i18n="num_shares_label">Number of shares:</label>
+        <input type="number" id="num-shares" min="2" max="20" value="5">
+      </div>
 
-      <button id="add-friend-btn" class="btn btn-secondary" type="button">
-        <span>+</span> <span data-i18n="add_friend">Add Friend</span>
-      </button>
+      <!-- Normal mode: friends list -->
+      <div id="friends-section">
+        <div id="friends-list"></div>
+
+        <button id="add-friend-btn" class="btn btn-secondary" type="button">
+          <span>+</span> <span data-i18n="add_friend">Add Friend</span>
+        </button>
+      </div>
 
       <div class="threshold-selector">
         <label for="threshold-select" data-i18n="threshold_label">Threshold:</label>
@@ -376,7 +441,7 @@
         <span data-i18n="threshold_desc">friends needed to recover</span>
       </div>
 
-      <details class="import-section">
+      <details id="import-section" class="import-section">
         <summary data-i18n="import_summary">Import contacts from existing project.yml</summary>
         <textarea id="yaml-import" placeholder="Paste your project.yml content here..." data-i18n-placeholder="import_placeholder"></textarea>
         <button id="import-btn" class="btn btn-secondary" type="button" data-i18n="import_btn">Import Contacts</button>
@@ -442,6 +507,9 @@
         subtitle: "Make sure your important files are never lost.",
         step1_title: "Friends",
         friends_hint: "Add at least 2 friends who will each hold a piece of your recovery key",
+        anonymous_label: "Anonymous",
+        anonymous_hint: "Shareholders won't know each other",
+        num_shares_label: "Number of shares:",
         add_friend: "Add Friend",
         threshold_label: "Threshold:",
         threshold_desc: "friends required to recover",
@@ -502,6 +570,9 @@
 
         step1_title: "Amigos",
         friends_hint: "Agrega al menos 2 amigos que guardarán partes de tu clave de recuperación",
+        anonymous_label: "Anónimo",
+        anonymous_hint: "Los participantes no sabrán quiénes son los demás",
+        num_shares_label: "Número de partes:",
         add_friend: "Agregar amigo",
 
         threshold_label: "Umbral:",
@@ -572,6 +643,9 @@
 
         step1_title: "Freunde",
         friends_hint: "Füge mindestens 2 Freunde hinzu, die Teile deines Wiederherstellungsschlüssels aufbewahren",
+        anonymous_label: "Anonym",
+        anonymous_hint: "Teilnehmer kennen einander nicht",
+        num_shares_label: "Anzahl der Teile:",
         add_friend: "Freund hinzufügen",
 
         threshold_label: "Schwelle:",
@@ -642,6 +716,9 @@
 
         step1_title: "Amis",
         friends_hint: "Ajoutez au moins 2 amis qui garderont des parties de votre clé de récupération",
+        anonymous_label: "Anonyme",
+        anonymous_hint: "Les participants ne connaîtront pas les autres",
+        num_shares_label: "Nombre de parts :",
         add_friend: "Ajouter un ami",
 
         threshold_label: "Seuil :",

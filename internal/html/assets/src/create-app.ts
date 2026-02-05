@@ -38,7 +38,7 @@ declare const t: TranslationFunction;
   }
 
   // State
-  const state: CreationState = {
+  const state: CreationState & { anonymous: boolean; numShares: number } = {
     projectName: generateProjectName(),
     friends: [],
     threshold: 2,
@@ -46,12 +46,20 @@ declare const t: TranslationFunction;
     bundles: [],
     wasmReady: false,
     generating: false,
-    generationComplete: false
+    generationComplete: false,
+    anonymous: false,
+    numShares: 5
   };
 
   // DOM elements interface
   interface Elements {
     loadingOverlay: HTMLElement | null;
+    anonymousMode: HTMLInputElement | null;
+    friendsHint: HTMLElement | null;
+    sharesInput: HTMLElement | null;
+    numShares: HTMLInputElement | null;
+    friendsSection: HTMLElement | null;
+    importSection: HTMLElement | null;
     yamlImport: HTMLTextAreaElement | null;
     importBtn: HTMLButtonElement | null;
     friendsList: HTMLElement | null;
@@ -75,6 +83,12 @@ declare const t: TranslationFunction;
   // DOM elements
   const elements: Elements = {
     loadingOverlay: document.getElementById('loading-overlay'),
+    anonymousMode: document.getElementById('anonymous-mode') as HTMLInputElement | null,
+    friendsHint: document.getElementById('friends-hint'),
+    sharesInput: document.getElementById('shares-input'),
+    numShares: document.getElementById('num-shares') as HTMLInputElement | null,
+    friendsSection: document.getElementById('friends-section'),
+    importSection: document.getElementById('import-section'),
     yamlImport: document.getElementById('yaml-import') as HTMLTextAreaElement | null,
     importBtn: document.getElementById('import-btn') as HTMLButtonElement | null,
     friendsList: document.getElementById('friends-list'),
@@ -109,6 +123,7 @@ declare const t: TranslationFunction;
   // ============================================
 
   async function init(): Promise<void> {
+    setupAnonymousMode();
     setupImport();
     setupFriends();
     setupFiles();
@@ -120,6 +135,46 @@ declare const t: TranslationFunction;
     updateThresholdOptions();
 
     await waitForWasm();
+  }
+
+  // ============================================
+  // Anonymous Mode
+  // ============================================
+
+  function setupAnonymousMode(): void {
+    elements.anonymousMode?.addEventListener('change', () => {
+      state.anonymous = elements.anonymousMode?.checked || false;
+      updateAnonymousModeUI();
+      updateThresholdOptions();
+      checkGenerateReady();
+    });
+
+    elements.numShares?.addEventListener('input', () => {
+      const value = parseInt(elements.numShares?.value || '5', 10);
+      state.numShares = Math.max(2, Math.min(20, value));
+      updateThresholdOptions();
+      checkGenerateReady();
+    });
+  }
+
+  function updateAnonymousModeUI(): void {
+    if (state.anonymous) {
+      // Hide friends list and show shares input
+      elements.friendsSection?.classList.add('hidden');
+      elements.sharesInput?.classList.remove('hidden');
+      elements.importSection?.classList.add('hidden');
+      if (elements.friendsHint) {
+        elements.friendsHint.textContent = t('anonymous_hint');
+      }
+    } else {
+      // Show friends list and hide shares input
+      elements.friendsSection?.classList.remove('hidden');
+      elements.sharesInput?.classList.add('hidden');
+      elements.importSection?.classList.remove('hidden');
+      if (elements.friendsHint) {
+        elements.friendsHint.textContent = t('friends_hint');
+      }
+    }
   }
 
   async function waitForWasm(): Promise<void> {
@@ -288,7 +343,7 @@ declare const t: TranslationFunction;
   }
 
   function updateThresholdOptions(): void {
-    const n = state.friends.length;
+    const n = state.anonymous ? state.numShares : state.friends.length;
     const current = state.threshold;
 
     if (elements.thresholdSelect) {
@@ -512,34 +567,41 @@ declare const t: TranslationFunction;
     const existingFilesError = elements.filesDropZone?.parentNode?.querySelector('.inline-error');
     existingFilesError?.remove();
 
-    // Friends validation
-    if (state.friends.length < 2) {
-      result.valid = false;
-      if (!silent) result.errors.push(t('validation_min_friends'));
+    // Friends validation (skip for anonymous mode)
+    if (state.anonymous) {
+      if (state.numShares < 2) {
+        result.valid = false;
+        if (!silent) result.errors.push(t('validation_min_friends'));
+      }
     } else {
-      state.friends.forEach((f, i) => {
-        const entry = elements.friendsList?.children[i] as HTMLElement | undefined;
-        if (!entry) return;
+      if (state.friends.length < 2) {
+        result.valid = false;
+        if (!silent) result.errors.push(t('validation_min_friends'));
+      } else {
+        state.friends.forEach((f, i) => {
+          const entry = elements.friendsList?.children[i] as HTMLElement | undefined;
+          if (!entry) return;
 
-        if (!f.name) {
-          result.valid = false;
-          if (!silent) {
-            result.errors.push(t('validation_friend_name', i + 1));
-            const nameInput = entry.querySelector('.friend-name') as HTMLInputElement;
-            nameInput?.classList.add('input-error');
-            if (!result.firstInvalidElement) result.firstInvalidElement = nameInput;
+          if (!f.name) {
+            result.valid = false;
+            if (!silent) {
+              result.errors.push(t('validation_friend_name', i + 1));
+              const nameInput = entry.querySelector('.friend-name') as HTMLInputElement;
+              nameInput?.classList.add('input-error');
+              if (!result.firstInvalidElement) result.firstInvalidElement = nameInput;
+            }
           }
-        }
-        if (!f.email) {
-          result.valid = false;
-          if (!silent) {
-            result.errors.push(t('validation_friend_email', i + 1, f.name || '?'));
-            const emailInput = entry.querySelector('.friend-email') as HTMLInputElement;
-            emailInput?.classList.add('input-error');
-            if (!result.firstInvalidElement) result.firstInvalidElement = emailInput;
+          if (!f.email) {
+            result.valid = false;
+            if (!silent) {
+              result.errors.push(t('validation_friend_email', i + 1, f.name || '?'));
+              const emailInput = entry.querySelector('.friend-email') as HTMLInputElement;
+              emailInput?.classList.add('input-error');
+              if (!result.firstInvalidElement) result.firstInvalidElement = emailInput;
+            }
           }
-        }
-      });
+        });
+      }
     }
 
     // Files validation
@@ -603,17 +665,33 @@ declare const t: TranslationFunction;
         data: f.data
       }));
 
-      const config = {
-        projectName: state.projectName,
-        threshold: state.threshold,
-        friends: state.friends.map(f => ({
+      // Create friends array - synthetic names for anonymous mode
+      let friends;
+      if (state.anonymous) {
+        friends = [];
+        for (let i = 0; i < state.numShares; i++) {
+          friends.push({
+            name: `Share ${i + 1}`,
+            email: '',
+            phone: ''
+          });
+        }
+      } else {
+        friends = state.friends.map(f => ({
           name: f.name,
           email: f.email,
           phone: f.phone || ''
-        })),
+        }));
+      }
+
+      const config = {
+        projectName: state.projectName,
+        threshold: state.threshold,
+        friends: friends,
         files: filesForWasm,
         version: window.VERSION || 'dev',
-        githubURL: window.GITHUB_URL || 'https://github.com/eljojo/rememory'
+        githubURL: window.GITHUB_URL || 'https://github.com/eljojo/rememory',
+        anonymous: state.anonymous
       };
 
       setProgress(10);
@@ -714,15 +792,24 @@ declare const t: TranslationFunction;
     yaml += `# Import this file to quickly restore your friend list\n\n`;
     yaml += `name: ${state.projectName}\n`;
     yaml += `threshold: ${state.threshold}\n`;
+    if (state.anonymous) {
+      yaml += `anonymous: true\n`;
+    }
     yaml += `friends:\n`;
 
-    state.friends.forEach(f => {
-      yaml += `  - name: ${f.name}\n`;
-      yaml += `    email: ${f.email}\n`;
-      if (f.phone) {
-        yaml += `    phone: "${f.phone}"\n`;
+    if (state.anonymous) {
+      for (let i = 0; i < state.numShares; i++) {
+        yaml += `  - name: Share ${i + 1}\n`;
       }
-    });
+    } else {
+      state.friends.forEach(f => {
+        yaml += `  - name: ${f.name}\n`;
+        yaml += `    email: ${f.email}\n`;
+        if (f.phone) {
+          yaml += `    phone: "${f.phone}"\n`;
+        }
+      });
+    }
 
     const blob = new Blob([yaml], { type: 'text/yaml' });
     const url = URL.createObjectURL(blob);

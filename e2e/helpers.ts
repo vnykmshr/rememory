@@ -44,6 +44,29 @@ export function createTestProject(): string {
   return projectDir;
 }
 
+// Create a sealed anonymous test project with bundles
+export function createAnonymousTestProject(): string {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-e2e-anon-'));
+  const projectDir = path.join(tmpDir, 'test-anon-project');
+  const bin = getRememoryBin();
+
+  // Create anonymous project with 3 shares, threshold 2
+  execSync(`${bin} init ${projectDir} --name "Anonymous E2E Test" --anonymous --shares 3 --threshold 2`, {
+    stdio: 'inherit'
+  });
+
+  // Add secret content
+  const manifestDir = path.join(projectDir, 'manifest');
+  fs.writeFileSync(path.join(manifestDir, 'secret.txt'), 'Anonymous secret: correct-horse-battery-staple');
+  fs.writeFileSync(path.join(manifestDir, 'notes.txt'), 'Anonymous notes!');
+
+  // Seal and generate bundles
+  execSync(`${bin} seal`, { cwd: projectDir, stdio: 'inherit' });
+  execSync(`${bin} bundle`, { cwd: projectDir, stdio: 'inherit' });
+
+  return projectDir;
+}
+
 // Extract a bundle ZIP and return the extracted directory path
 // Note: friendName is case-insensitive, bundle files are lowercase
 export function extractBundle(bundlesDir: string, friendName: string): string {
@@ -63,6 +86,16 @@ export function extractBundle(bundlesDir: string, friendName: string): string {
 // Extract multiple bundles
 export function extractBundles(bundlesDir: string, friendNames: string[]): string[] {
   return friendNames.map(name => extractBundle(bundlesDir, name));
+}
+
+// Extract anonymous bundle by share number
+export function extractAnonymousBundle(bundlesDir: string, shareNum: number): string {
+  return extractBundle(bundlesDir, `share-${shareNum}`);
+}
+
+// Extract multiple anonymous bundles
+export function extractAnonymousBundles(bundlesDir: string, shareNums: number[]): string[] {
+  return shareNums.map(num => extractAnonymousBundle(bundlesDir, num));
 }
 
 // Page helper class for recovery tool interactions
@@ -350,5 +383,44 @@ export class CreationPage {
   // Dismiss dialogs (for validation error tests)
   onDialog(action: 'dismiss' | 'accept' = 'dismiss'): void {
     this.page.on('dialog', dialog => dialog[action]());
+  }
+
+  // Anonymous mode methods
+  async toggleAnonymousMode(): Promise<void> {
+    await this.page.locator('#anonymous-mode').click();
+  }
+
+  async expectAnonymousModeChecked(): Promise<void> {
+    await expect(this.page.locator('#anonymous-mode')).toBeChecked();
+  }
+
+  async expectAnonymousModeUnchecked(): Promise<void> {
+    await expect(this.page.locator('#anonymous-mode')).not.toBeChecked();
+  }
+
+  async expectFriendsListHidden(): Promise<void> {
+    await expect(this.page.locator('#friends-section')).toHaveClass(/hidden/);
+  }
+
+  async expectFriendsListVisible(): Promise<void> {
+    await expect(this.page.locator('#friends-section')).not.toHaveClass(/hidden/);
+  }
+
+  async expectSharesInputVisible(): Promise<void> {
+    await expect(this.page.locator('#shares-input')).toBeVisible();
+  }
+
+  async expectSharesInputHidden(): Promise<void> {
+    await expect(this.page.locator('#shares-input')).toHaveClass(/hidden/);
+  }
+
+  async setNumShares(count: number): Promise<void> {
+    await this.page.locator('#num-shares').fill(String(count));
+    // Trigger input event to update state
+    await this.page.locator('#num-shares').dispatchEvent('input');
+  }
+
+  async expectNumShares(count: number): Promise<void> {
+    await expect(this.page.locator('#num-shares')).toHaveValue(String(count));
   }
 }

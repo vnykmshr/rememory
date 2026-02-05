@@ -25,6 +25,7 @@ type ReadmeData struct {
 	ManifestChecksum string
 	RecoverChecksum  string
 	Created          time.Time
+	Anonymous        bool
 }
 
 // Font sizes
@@ -57,7 +58,11 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	pdf.SetFont("Helvetica", "B", bodySize)
 	pdf.CellFormat(0, 7, "  !! YOU CANNOT USE THIS FILE ALONE", "", 1, "L", true, 0, "")
 	pdf.SetFont("Helvetica", "", bodySize)
-	pdf.CellFormat(0, 5, "  You will need help from other friends listed below.", "", 1, "L", true, 0, "")
+	if data.Anonymous {
+		pdf.CellFormat(0, 5, "  You will need to combine this with other shares.", "", 1, "L", true, 0, "")
+	} else {
+		pdf.CellFormat(0, 5, "  You will need help from other friends listed below.", "", 1, "L", true, 0, "")
+	}
 	pdf.Ln(2)
 	pdf.SetFont("Helvetica", "B", bodySize)
 	pdf.CellFormat(0, 7, "  !! CONFIDENTIAL - DO NOT SHARE THIS FILE", "", 1, "L", true, 0, "")
@@ -80,19 +85,21 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	addBody(pdf, fmt.Sprintf("At least %d of you must cooperate to decrypt the contents.", data.Threshold))
 	pdf.Ln(5)
 
-	// Section: Other share holders (right after What is this?)
-	addSection(pdf, "OTHER SHARE HOLDERS (contact to coordinate recovery)")
-	for _, friend := range data.OtherFriends {
-		pdf.SetFont("Helvetica", "B", bodySize)
-		pdf.CellFormat(0, 6, friend.Name, "", 1, "L", false, 0, "")
-		pdf.SetFont("Helvetica", "", bodySize)
-		pdf.CellFormat(0, 5, fmt.Sprintf("    Email: %s", friend.Email), "", 1, "L", false, 0, "")
-		if friend.Phone != "" {
-			pdf.CellFormat(0, 5, fmt.Sprintf("    Phone: %s", friend.Phone), "", 1, "L", false, 0, "")
+	// Section: Other share holders (right after What is this?) - skip for anonymous mode
+	if !data.Anonymous {
+		addSection(pdf, "OTHER SHARE HOLDERS (contact to coordinate recovery)")
+		for _, friend := range data.OtherFriends {
+			pdf.SetFont("Helvetica", "B", bodySize)
+			pdf.CellFormat(0, 6, friend.Name, "", 1, "L", false, 0, "")
+			pdf.SetFont("Helvetica", "", bodySize)
+			pdf.CellFormat(0, 5, fmt.Sprintf("    Email: %s", friend.Email), "", 1, "L", false, 0, "")
+			if friend.Phone != "" {
+				pdf.CellFormat(0, 5, fmt.Sprintf("    Phone: %s", friend.Phone), "", 1, "L", false, 0, "")
+			}
+			pdf.Ln(2)
 		}
-		pdf.Ln(2)
+		pdf.Ln(5)
 	}
-	pdf.Ln(5)
 
 	// Section: Browser recovery
 	addSection(pdf, "HOW TO RECOVER (PRIMARY METHOD - Browser)")
@@ -106,17 +113,27 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	addBody(pdf, "2. Load the encrypted file (MANIFEST.age) from this bundle:")
 	addBody(pdf, "   - Drag and drop it onto the manifest area, OR click to browse")
 	pdf.Ln(2)
-	addBody(pdf, "3. You'll see a contact list showing other friends who hold shares.")
-	addBody(pdf, "   Contact them and ask them to send you their README.txt file.")
-	pdf.Ln(2)
-	addBody(pdf, "4. For each friend's README.txt you receive:")
-	addBody(pdf, "   - Drag and drop it onto the page, OR")
-	addBody(pdf, "   - Click the clipboard button to paste their share text")
-	pdf.Ln(2)
-	addBody(pdf, "5. As you add shares, checkmarks appear next to each friend's name.")
-	addBody(pdf, fmt.Sprintf("   Once you have %d shares total, recovery happens AUTOMATICALLY!", data.Threshold))
-	pdf.Ln(2)
-	addBody(pdf, "6. Download the recovered files")
+	if data.Anonymous {
+		addBody(pdf, "3. Add other shares as you receive them")
+		addBody(pdf, "   - Drag and drop README.txt files onto the page, OR")
+		addBody(pdf, "   - Click the clipboard button to paste share text")
+		pdf.Ln(2)
+		addBody(pdf, fmt.Sprintf("4. Once you have %d shares total, recovery happens AUTOMATICALLY!", data.Threshold))
+		pdf.Ln(2)
+		addBody(pdf, "5. Download the recovered files")
+	} else {
+		addBody(pdf, "3. You'll see a contact list showing other friends who hold shares.")
+		addBody(pdf, "   Contact them and ask them to send you their README.txt file.")
+		pdf.Ln(2)
+		addBody(pdf, "4. For each friend's README.txt you receive:")
+		addBody(pdf, "   - Drag and drop it onto the page, OR")
+		addBody(pdf, "   - Click the clipboard button to paste their share text")
+		pdf.Ln(2)
+		addBody(pdf, "5. As you add shares, checkmarks appear next to each friend's name.")
+		addBody(pdf, fmt.Sprintf("   Once you have %d shares total, recovery happens AUTOMATICALLY!", data.Threshold))
+		pdf.Ln(2)
+		addBody(pdf, "6. Download the recovered files")
+	}
 	pdf.Ln(2)
 	pdf.SetFont("Helvetica", "I", bodySize)
 	pdf.MultiCell(0, 5, "Works completely offline - no internet required!", "", "L", false)

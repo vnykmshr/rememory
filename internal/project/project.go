@@ -43,6 +43,7 @@ type Project struct {
 	Name      string   `yaml:"name"`
 	Created   string   `yaml:"created"`
 	Threshold int      `yaml:"threshold"`
+	Anonymous bool     `yaml:"anonymous,omitempty"`
 	Friends   []Friend `yaml:"friends"`
 	Sealed    *Sealed  `yaml:"sealed,omitempty"`
 
@@ -101,7 +102,8 @@ func (p *Project) Validate() error {
 		if f.Name == "" {
 			return fmt.Errorf("friend %d: name is required", i+1)
 		}
-		if f.Email == "" {
+		// Email is only required for non-anonymous projects
+		if !p.Anonymous && f.Email == "" {
 			return fmt.Errorf("friend %d (%s): email is required", i+1, f.Name)
 		}
 	}
@@ -154,6 +156,20 @@ func FindProjectDir(startDir string) (string, error) {
 
 // New creates a new project with the given configuration.
 func New(dir, name string, threshold int, friends []Friend) (*Project, error) {
+	return NewWithOptions(dir, name, threshold, friends, false)
+}
+
+// NewAnonymous creates a new anonymous project (no contact info).
+func NewAnonymous(dir, name string, threshold int, numShares int) (*Project, error) {
+	friends := make([]Friend, numShares)
+	for i := 0; i < numShares; i++ {
+		friends[i] = Friend{Name: fmt.Sprintf("Share %d", i+1)}
+	}
+	return NewWithOptions(dir, name, threshold, friends, true)
+}
+
+// NewWithOptions creates a new project with the given configuration.
+func NewWithOptions(dir, name string, threshold int, friends []Friend, anonymous bool) (*Project, error) {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return nil, fmt.Errorf("creating project directory: %w", err)
 	}
@@ -167,6 +183,7 @@ func New(dir, name string, threshold int, friends []Friend) (*Project, error) {
 		Name:      name,
 		Created:   time.Now().Format("2006-01-02"),
 		Threshold: threshold,
+		Anonymous: anonymous,
 		Friends:   friends,
 		Path:      dir,
 	}
