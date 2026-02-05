@@ -200,7 +200,8 @@ make serve        # Serves at http://localhost:8000
 
 </details>
 
-## Similar Tools
+<details>
+<summary>Other Similar Tools</summary>
 
 ReMemory isn't the first tool to use Shamir's Secret Sharing for file protection. I built ReMemory before discovering these alternatives:
 
@@ -219,6 +220,8 @@ ReMemory solves this by providing:
 - **Self-contained offline tool** — works without internet, servers, or this project existing
 
 The cryptographic foundation is the same. The difference is who can actually use it when you need them to.
+
+</details>
 
 ## License
 
