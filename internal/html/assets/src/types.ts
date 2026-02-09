@@ -184,6 +184,7 @@ declare global {
     rememoryDecryptManifest(manifest: Uint8Array, passphrase: string): DecryptResult;
     rememoryExtractTarGz(data: Uint8Array): ExtractResult;
     rememoryExtractBundle(zipData: Uint8Array): BundleExtractResult;
+    rememoryParseCompactShare(compact: string): ShareParseResult;
 
     // Creation functions (create.wasm)
     rememoryCreateBundles(config: BundleConfig): BundleCreateResult;

@@ -57,6 +57,25 @@ func parseShare(content string) (*ShareInfo, error) {
 	}, nil
 }
 
+// parseCompactShare parses a compact-encoded share string.
+func parseCompactShare(compact string) (*ShareInfo, error) {
+	share, err := core.ParseCompact(compact)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ShareInfo{
+		Version:   share.Version,
+		Index:     share.Index,
+		Total:     share.Total,
+		Threshold: share.Threshold,
+		Holder:    share.Holder,
+		Created:   share.Created.Format("2006-01-02T15:04:05Z07:00"),
+		Checksum:  share.Checksum,
+		DataB64:   base64.StdEncoding.EncodeToString(share.Data),
+	}, nil
+}
+
 // combineShares combines multiple shares to recover the passphrase.
 // Uses core.Combine for the actual combination.
 func combineShares(shares []ShareData) (string, error) {

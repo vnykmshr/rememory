@@ -90,6 +90,9 @@ declare const t: TranslationFunction;
   // Share regex to extract from README.txt content
   const shareRegex = /-----BEGIN REMEMORY SHARE-----([\s\S]*?)-----END REMEMORY SHARE-----/;
 
+  // Compact share format regex: RM{version}:{index}:{total}:{threshold}:{base64url}:{check}
+  const compactShareRegex = /^RM\d+:\d+:\d+:\d+:[A-Za-z0-9_-]+:[0-9a-f]{4}$/;
+
   // ============================================
   // Error Handlers
   // ============================================
@@ -226,6 +229,9 @@ declare const t: TranslationFunction;
     if (personalization) {
       loadPersonalizationData();
     }
+
+    // Check URL fragment for compact share (e.g. #share=RM1:2:5:3:BASE64:CHECK)
+    loadShareFromFragment();
   }
 
   // ============================================
@@ -250,6 +256,41 @@ declare const t: TranslationFunction;
     }
 
     checkRecoverReady();
+  }
+
+  // ============================================
+  // URL Fragment Share Loading
+  // ============================================
+
+  function loadShareFromFragment(): void {
+    if (!state.wasmReady) return;
+
+    const hash = window.location.hash;
+    if (!hash || !hash.startsWith('#share=')) return;
+
+    const compact = decodeURIComponent(hash.slice('#share='.length));
+    if (!compactShareRegex.test(compact)) return;
+
+    const result = window.rememoryParseCompactShare(compact);
+    if (result.error || !result.share) return;
+
+    const share = result.share;
+
+    if (state.shares.some(s => s.index === share.index)) return;
+
+    if (state.shares.length === 0) {
+      state.threshold = share.threshold;
+      state.total = share.total;
+    }
+
+    state.shares.push(share);
+    updateSharesUI();
+    checkRecoverReady();
+
+    // Clear the fragment from the URL bar to avoid re-importing on reload
+    if (window.history?.replaceState) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
   }
 
   function renderContactList(): void {
@@ -461,7 +502,36 @@ declare const t: TranslationFunction;
       clearInlineError(elements.shareDropZone);
     }
 
-    if (!shareRegex.test(content)) {
+    // Try compact format first, then PEM format
+    let share: import('./types').ParsedShare | undefined;
+
+    if (compactShareRegex.test(content.trim())) {
+      const result = window.rememoryParseCompactShare(content.trim());
+      if (result.error || !result.share) {
+        showError(
+          result.error || t('error_invalid_share_message', t('pasted_content')),
+          {
+            title: t('error_invalid_share_title'),
+            guidance: t('error_invalid_share_guidance')
+          }
+        );
+        return;
+      }
+      share = result.share;
+    } else if (shareRegex.test(content)) {
+      const result = window.rememoryParseShare(content);
+      if (result.error || !result.share) {
+        showError(
+          t('error_invalid_share_message', t('pasted_content')),
+          {
+            title: t('error_invalid_share_title'),
+            guidance: t('error_invalid_share_guidance')
+          }
+        );
+        return;
+      }
+      share = result.share;
+    } else {
       showError(
         t('error_paste_no_share_message'),
         {
@@ -471,20 +541,6 @@ declare const t: TranslationFunction;
       );
       return;
     }
-
-    const result = window.rememoryParseShare(content);
-    if (result.error || !result.share) {
-      showError(
-        t('error_invalid_share_message', t('pasted_content')),
-        {
-          title: t('error_invalid_share_title'),
-          guidance: t('error_invalid_share_guidance')
-        }
-      );
-      return;
-    }
-
-    const share = result.share;
 
     if (state.shares.some(s => s.index === share.index)) {
       errorHandlers.duplicateShare(share.index);

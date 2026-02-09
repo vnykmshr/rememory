@@ -178,6 +178,35 @@ func extractBundleJS(this js.Value, args []js.Value) any {
 	return js.ValueOf(result)
 }
 
+// parseCompactShareJS parses a compact-encoded share string (e.g. RM1:2:5:3:BASE64:CHECK).
+// Args: compact (string)
+// Returns: { share: {...}, error: string|null }
+func parseCompactShareJS(this js.Value, args []js.Value) any {
+	if len(args) < 1 {
+		return errorResult("missing compact share argument")
+	}
+
+	compact := args[0].String()
+	share, err := parseCompactShare(compact)
+	if err != nil {
+		return errorResult(err.Error())
+	}
+
+	return js.ValueOf(map[string]any{
+		"share": map[string]any{
+			"version":   share.Version,
+			"index":     share.Index,
+			"total":     share.Total,
+			"threshold": share.Threshold,
+			"holder":    share.Holder,
+			"created":   share.Created,
+			"checksum":  share.Checksum,
+			"dataB64":   share.DataB64,
+		},
+		"error": nil,
+	})
+}
+
 func errorResult(msg string) any {
 	return js.ValueOf(map[string]any{
 		"error": msg,
