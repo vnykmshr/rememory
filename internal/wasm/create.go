@@ -269,6 +269,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 		readmeContent := bundle.GenerateReadme(readmeData)
 
 		// Generate README.pdf
+		// Web-created bundles always use the GitHub Pages recovery URL
 		pdfData := pdf.ReadmeData{
 			ProjectName:      config.ProjectName,
 			Holder:           friend.Name,
@@ -282,6 +283,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			RecoverChecksum:  recoverChecksum,
 			Created:          now,
 			Anonymous:        config.Anonymous,
+			RecoveryURL:      bundle.DefaultRecoveryURL,
 		}
 		pdfContent, err := pdf.GenerateReadme(pdfData)
 		if err != nil {

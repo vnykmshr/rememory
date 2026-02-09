@@ -30,6 +30,7 @@ Each bundle contains:
 }
 
 func init() {
+	bundleCmd.Flags().String("recovery-url", bundle.DefaultRecoveryURL, "Base URL for QR code in PDF")
 	rootCmd.AddCommand(bundleCmd)
 }
 
@@ -65,10 +66,13 @@ func runBundle(cmd *cobra.Command, args []string) error {
 	// Generate bundles
 	fmt.Printf("Generating bundles for %d friends...\n\n", len(p.Friends))
 
+	recoveryURL, _ := cmd.Flags().GetString("recovery-url")
+
 	cfg := bundle.Config{
 		Version:          version,
 		GitHubReleaseURL: fmt.Sprintf("https://github.com/eljojo/rememory/releases/tag/%s", version),
 		WASMBytes:        wasmBytes,
+		RecoveryURL:      recoveryURL,
 	}
 
 	if err := bundle.GenerateAll(p, cfg); err != nil {

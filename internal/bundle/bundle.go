@@ -16,11 +16,16 @@ import (
 	"github.com/eljojo/rememory/internal/project"
 )
 
+// DefaultRecoveryURL is the default base URL for QR codes in PDFs.
+// Points to the recover.html hosted on GitHub Pages.
+const DefaultRecoveryURL = "https://eljojo.github.io/rememory/recover.html"
+
 // Config holds configuration for bundle generation.
 type Config struct {
 	Version          string // Tool version (e.g., "v1.0.0")
 	GitHubReleaseURL string // URL to GitHub release for CLI download
 	WASMBytes        []byte // Compiled recover.wasm binary
+	RecoveryURL      string // Optional: base URL for QR code (e.g. "https://example.com/recover.html")
 }
 
 // GenerateAll creates bundles for all friends in the project.
@@ -102,6 +107,7 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			GitHubReleaseURL: cfg.GitHubReleaseURL,
 			SealedAt:         p.Sealed.At,
 			Anonymous:        p.Anonymous,
+			RecoveryURL:      cfg.RecoveryURL,
 		})
 		if err != nil {
 			return fmt.Errorf("generating bundle for %s: %w", friend.Name, err)
@@ -133,6 +139,7 @@ type BundleParams struct {
 	GitHubReleaseURL string
 	SealedAt         time.Time
 	Anonymous        bool
+	RecoveryURL      string
 }
 
 // GenerateBundle creates a single bundle ZIP file for one friend.
@@ -170,6 +177,7 @@ func GenerateBundle(params BundleParams) error {
 		RecoverChecksum:  readmeData.RecoverChecksum,
 		Created:          readmeData.Created,
 		Anonymous:        readmeData.Anonymous,
+		RecoveryURL:      params.RecoveryURL,
 	})
 	if err != nil {
 		return fmt.Errorf("generating PDF: %w", err)
