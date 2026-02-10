@@ -74,7 +74,7 @@ func TestFullWorkflow(t *testing.T) {
 	// Create share objects with metadata
 	shareObjects := make([]*core.Share, len(shares))
 	for i, data := range shares {
-		shareObjects[i] = core.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
+		shareObjects[i] = core.NewShare(1, i+1, len(friends), threshold, friends[i].Name, data)
 	}
 
 	// Verify immediate reconstruction
@@ -181,7 +181,7 @@ func TestInsufficientShares(t *testing.T) {
 
 // TestCorruptedShare verifies that corrupted shares are detected
 func TestCorruptedShare(t *testing.T) {
-	share := core.NewShare(1, 5, 3, "Alice", []byte("test-data"))
+	share := core.NewShare(1, 1, 5, 3, "Alice", []byte("test-data"))
 	encoded := share.Encode()
 
 	// Parse and verify - should work
@@ -289,7 +289,7 @@ func TestAllThresholdCombinations(t *testing.T) {
 				// Create share objects and encode/decode them
 				shareObjs := make([]*core.Share, n)
 				for i, data := range shares {
-					shareObjs[i] = core.NewShare(i+1, n, k, "", data)
+					shareObjs[i] = core.NewShare(1, i+1, n, k, "", data)
 					encoded := shareObjs[i].Encode()
 					parsed, err := core.ParseShare([]byte(encoded))
 					if err != nil {
@@ -381,7 +381,7 @@ func TestBundleGeneration(t *testing.T) {
 
 	shareInfos := make([]project.ShareInfo, len(friends))
 	for i, data := range shares {
-		share := core.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
+		share := core.NewShare(1, i+1, len(friends), threshold, friends[i].Name, data)
 		sharePath := filepath.Join(p.SharesPath(), share.Filename())
 		if err := os.WriteFile(sharePath, []byte(share.Encode()), 0644); err != nil {
 			t.Fatalf("writing share: %v", err)
@@ -598,7 +598,7 @@ func TestBundleRecovery(t *testing.T) {
 	shares, _ := core.Split([]byte(passphrase), len(friends), threshold)
 	shareInfos := make([]project.ShareInfo, len(friends))
 	for i, data := range shares {
-		share := core.NewShare(i+1, len(friends), threshold, friends[i].Name, data)
+		share := core.NewShare(1, i+1, len(friends), threshold, friends[i].Name, data)
 		sharePath := filepath.Join(p.SharesPath(), share.Filename())
 		os.WriteFile(sharePath, []byte(share.Encode()), 0644)
 		shareInfos[i] = project.ShareInfo{
@@ -763,7 +763,7 @@ func TestAnonymousBundleGeneration(t *testing.T) {
 	shares, _ := core.Split([]byte(passphrase), len(p.Friends), p.Threshold)
 	shareInfos := make([]project.ShareInfo, len(p.Friends))
 	for i, data := range shares {
-		share := core.NewShare(i+1, len(p.Friends), p.Threshold, p.Friends[i].Name, data)
+		share := core.NewShare(1, i+1, len(p.Friends), p.Threshold, p.Friends[i].Name, data)
 		sharePath := filepath.Join(p.SharesPath(), share.Filename())
 		os.WriteFile(sharePath, []byte(share.Encode()), 0644)
 		shareInfos[i] = project.ShareInfo{
@@ -909,7 +909,7 @@ func TestAnonymousBundleRecovery(t *testing.T) {
 	shares, _ := core.Split([]byte(passphrase), len(p.Friends), p.Threshold)
 	shareInfos := make([]project.ShareInfo, len(p.Friends))
 	for i, data := range shares {
-		share := core.NewShare(i+1, len(p.Friends), p.Threshold, p.Friends[i].Name, data)
+		share := core.NewShare(1, i+1, len(p.Friends), p.Threshold, p.Friends[i].Name, data)
 		sharePath := filepath.Join(p.SharesPath(), share.Filename())
 		os.WriteFile(sharePath, []byte(share.Encode()), 0644)
 		shareInfos[i] = project.ShareInfo{

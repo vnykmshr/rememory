@@ -12,7 +12,7 @@ import (
 )
 
 func testReadmeData() ReadmeData {
-	share := core.NewShare(1, 3, 2, "Alice", []byte("test-share-data-for-qr-code-12345"))
+	share := core.NewShare(1, 1, 3, 2, "Alice", []byte("test-share-data-for-qr-code-12345"))
 	return ReadmeData{
 		ProjectName:      "Test Project",
 		Holder:           "Alice",
@@ -111,7 +111,7 @@ func TestQRCodeGeneratesValidPNG(t *testing.T) {
 
 func TestQRCodeContentMatchesCompact(t *testing.T) {
 	// Verify the QR content is the default URL with compact share in fragment
-	share := core.NewShare(2, 5, 3, "Bob", []byte("another-share-data-for-testing"))
+	share := core.NewShare(1, 2, 5, 3, "Bob", []byte("another-share-data-for-testing"))
 	data := ReadmeData{
 		Share:     share,
 		Holder:    "Bob",
