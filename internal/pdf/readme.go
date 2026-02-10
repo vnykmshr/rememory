@@ -154,9 +154,9 @@ func GenerateReadme(data ReadmeData) ([]byte, error) {
 	pdf.Ln(8)
 
 	// Word grid (25 recovery words in two columns: 24 data words + 1 index word)
-	words := data.Share.Words()
+	words, _ := data.Share.Words()
 	if len(words) > 0 {
-		addSection(pdf, "YOUR 25 RECOVERY WORDS")
+		addSection(pdf, fmt.Sprintf("YOUR %d RECOVERY WORDS", len(words)))
 		pdf.SetFont(fontMono, "", bodySize)
 
 		half := (len(words) + 1) / 2

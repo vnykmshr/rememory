@@ -64,6 +64,7 @@ func DecodeWords(words []string) ([]byte, error) {
 	// Convert words to 11-bit indices
 	indices := make([]int, len(words))
 	for i, w := range words {
+		w = strings.ToLower(strings.TrimSpace(w))
 		idx, ok := wordIndex[w]
 		if !ok {
 			suggestion := SuggestWord(w)
@@ -88,6 +89,8 @@ func DecodeWords(words []string) ([]byte, error) {
 }
 
 // set11Bits writes an 11-bit value at the given bit offset in data.
+// Precondition: the target bits in data must be zero-initialized, as this
+// function only sets (ORs) 1-bits and never clears existing bits.
 func set11Bits(data []byte, bitOffset int, val int) {
 	for b := 0; b < 11; b++ {
 		byteIdx := (bitOffset + b) / 8
@@ -102,10 +105,10 @@ func set11Bits(data []byte, bitOffset int, val int) {
 
 // Word 25 layout (11 bits total):
 //
-//   ┌─────────────┬──────────────────────┐
-//   │ index (4 hi) │   checksum (7 lo)    │
-//   │  bits 10-7   │     bits 6-0         │
-//   └─────────────┴──────────────────────┘
+//	┌──────────────┬────────────────────┐
+//	│ index (4 hi) │   checksum (7 lo)  │
+//	│  bits 10-7   │     bits 6-0       │
+//	└──────────────┴────────────────────┘
 //
 // Index: share index (1-based) stored in upper 4 bits.
 //   - Shares 1–15: index stored directly.
@@ -119,10 +122,10 @@ func set11Bits(data []byte, bitOffset int, val int) {
 //     happen to be valid BIP39 words.
 //   - False positive rate: 1/128 (~0.8%).
 const (
-	word25IndexBits    = 4
-	word25CheckBits    = 7
-	word25MaxIndex     = (1 << word25IndexBits) - 1 // 15
-	word25CheckMask    = (1 << word25CheckBits) - 1  // 0x7F
+	word25IndexBits = 4
+	word25CheckBits = 7
+	word25MaxIndex  = (1 << word25IndexBits) - 1 // 15
+	word25CheckMask = (1 << word25CheckBits) - 1 // 0x7F
 )
 
 // word25Checksum computes the 7-bit checksum for the 25th word.
@@ -150,15 +153,18 @@ func word25Decode(val int) (index int, checksum int) {
 // Words returns this share's data encoded as 25 BIP39 words.
 // The first 24 words encode the share data (33 bytes = 264 bits, 11 bits per word).
 // The 25th word packs 4 bits of share index + 7 bits of checksum (see word25 layout above).
-// Returns nil for v1 shares, which use base64-encoded data unsuitable for word encoding.
-func (s *Share) Words() []string {
+// Returns an error for v1 shares or if the share index is negative.
+func (s *Share) Words() ([]string, error) {
 	if s.Version < 2 {
-		return nil
+		return nil, fmt.Errorf("word encoding requires share version 2 or later (got v%d)", s.Version)
+	}
+	if s.Index < 0 {
+		return nil, fmt.Errorf("share index must be non-negative (got %d)", s.Index)
 	}
 	words := EncodeWords(s.Data)
 	bip39Idx := word25Encode(s.Index, s.Data)
 	words = append(words, bip39English[bip39Idx])
-	return words
+	return words, nil
 }
 
 // DecodeShareWords decodes 25 BIP39 words into share data and index.
@@ -166,8 +172,8 @@ func (s *Share) Words() []string {
 // Returns index=0 if the share index was > 15 (the sentinel value).
 // Returns an error if the checksum doesn't match (wrong word order, typos, etc.).
 func DecodeShareWords(words []string) (data []byte, index int, err error) {
-	if len(words) < 2 {
-		return nil, 0, fmt.Errorf("need at least 2 words")
+	if len(words) != 25 {
+		return nil, 0, fmt.Errorf("expected 25 words, got %d", len(words))
 	}
 
 	// Look up the 25th word in the BIP39 list

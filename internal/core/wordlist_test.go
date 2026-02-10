@@ -155,7 +155,10 @@ func TestShareWords(t *testing.T) {
 		data[i] = byte(i)
 	}
 	share := NewShare(2, 1, 5, 3, "Alice", data)
-	words := share.Words()
+	words, err := share.Words()
+	if err != nil {
+		t.Fatalf("Words() error: %v", err)
+	}
 	if len(words) != 25 {
 		t.Errorf("expected 25 words for 33-byte share (24 data + 1 meta), got %d", len(words))
 	}
@@ -184,8 +187,8 @@ func TestDecodeShareWordsRoundTrip(t *testing.T) {
 		{"index 5", 5, 5},
 		{"index 15 (max exact)", 15, 15},
 		{"index 16 (sentinel)", 16, 0},   // above 15 → stored as 0
-		{"index 100 (sentinel)", 100, 0},  // above 15 → stored as 0
-		{"index 255 (sentinel)", 255, 0},  // above 15 → stored as 0
+		{"index 100 (sentinel)", 100, 0}, // above 15 → stored as 0
+		{"index 255 (sentinel)", 255, 0}, // above 15 → stored as 0
 	}
 
 	for _, tt := range tests {
@@ -195,7 +198,10 @@ func TestDecodeShareWordsRoundTrip(t *testing.T) {
 				data[i] = byte(i * 7)
 			}
 			share := NewShare(2, tt.index, 5, 3, "Test", data)
-			words := share.Words()
+			words, err := share.Words()
+			if err != nil {
+				t.Fatalf("Words() error: %v", err)
+			}
 			if len(words) != 25 {
 				t.Fatalf("expected 25 words, got %d", len(words))
 			}
@@ -222,19 +228,22 @@ func TestWord25ChecksumDetectsTransposition(t *testing.T) {
 		data[i] = byte(i * 13)
 	}
 	share := NewShare(2, 3, 5, 3, "Test", data)
-	words := share.Words()
+	words, err := share.Words()
+	if err != nil {
+		t.Fatalf("Words() error: %v", err)
+	}
 
 	// Swap words 0 and 1 (adjacent transposition in data words)
 	swapped := make([]string, len(words))
 	copy(swapped, words)
 	swapped[0], swapped[1] = swapped[1], swapped[0]
 
-	_, _, err := DecodeShareWords(swapped)
-	if err == nil {
+	_, _, decErr := DecodeShareWords(swapped)
+	if decErr == nil {
 		t.Error("expected checksum error for transposed words, got nil")
 	}
-	if !strings.Contains(err.Error(), "checksum") {
-		t.Errorf("expected checksum error, got: %v", err)
+	if !strings.Contains(decErr.Error(), "checksum") {
+		t.Errorf("expected checksum error, got: %v", decErr)
 	}
 }
 
@@ -246,7 +255,10 @@ func TestWord25ChecksumDetectsSubstitution(t *testing.T) {
 		data[i] = byte(i * 13)
 	}
 	share := NewShare(2, 3, 5, 3, "Test", data)
-	words := share.Words()
+	words, err := share.Words()
+	if err != nil {
+		t.Fatalf("Words() error: %v", err)
+	}
 
 	// Replace word 5 with a different BIP39 word
 	modified := make([]string, len(words))
@@ -258,7 +270,7 @@ func TestWord25ChecksumDetectsSubstitution(t *testing.T) {
 	}
 	modified[5] = replacement
 
-	_, _, err := DecodeShareWords(modified)
+	_, _, err = DecodeShareWords(modified)
 	if err == nil {
 		t.Error("expected checksum error for substituted word, got nil")
 	}
@@ -326,5 +338,96 @@ func TestWord25ChecksumDifferentData(t *testing.T) {
 	// Use sufficiently different inputs to make collision astronomically unlikely.
 	if check1 == check2 {
 		t.Logf("warning: checksums collided (1/128 chance) — not a bug, but unexpected")
+	}
+}
+
+func TestWordsV1ShareReturnsError(t *testing.T) {
+	data := make([]byte, 33)
+	share := NewShare(1, 1, 5, 3, "Alice", data)
+	_, err := share.Words()
+	if err == nil {
+		t.Fatal("expected error for v1 share")
+	}
+	if !strings.Contains(err.Error(), "version 2") {
+		t.Errorf("expected version error, got: %v", err)
+	}
+}
+
+func TestDecodeShareWordsWrongCount(t *testing.T) {
+	tests := []struct {
+		name  string
+		count int
+	}{
+		{"0 words", 0},
+		{"1 word", 1},
+		{"10 words", 10},
+		{"24 words", 24},
+		{"26 words", 26},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			words := make([]string, tt.count)
+			for i := range words {
+				words[i] = "abandon"
+			}
+			_, _, err := DecodeShareWords(words)
+			if err == nil {
+				t.Fatalf("expected error for %d words", tt.count)
+			}
+			if !strings.Contains(err.Error(), "expected 25 words") {
+				t.Errorf("expected word count error, got: %v", err)
+			}
+		})
+	}
+}
+
+func TestDecodeWordsMixedCase(t *testing.T) {
+	data := make([]byte, 33)
+	for i := range data {
+		data[i] = byte(i * 7)
+	}
+	words := EncodeWords(data)
+
+	// Uppercase some words
+	mixed := make([]string, len(words))
+	for i, w := range words {
+		if i%2 == 0 {
+			mixed[i] = strings.ToUpper(w)
+		} else {
+			// Capitalize first letter
+			mixed[i] = strings.ToUpper(w[:1]) + w[1:]
+		}
+	}
+
+	decoded, err := DecodeWords(mixed)
+	if err != nil {
+		t.Fatalf("DecodeWords should handle mixed case, got error: %v", err)
+	}
+	if !bytes.Equal(decoded, data) {
+		t.Errorf("mixed-case round-trip mismatch")
+	}
+}
+
+func TestSuggestWordNoMatch(t *testing.T) {
+	// Strings far from any BIP39 word (distance > 2)
+	tests := []string{"zzzzzzz", "qqqqqq", "xylophone"}
+	for _, input := range tests {
+		got := SuggestWord(input)
+		if got != "" {
+			t.Errorf("SuggestWord(%q) = %q, want empty string (no close match)", input, got)
+		}
+	}
+}
+
+func TestWordsNegativeIndexReturnsError(t *testing.T) {
+	data := make([]byte, 33)
+	share := NewShare(2, -1, 5, 3, "Alice", data)
+	_, err := share.Words()
+	if err == nil {
+		t.Fatal("expected error for negative index")
+	}
+	if !strings.Contains(err.Error(), "non-negative") {
+		t.Errorf("expected non-negative error, got: %v", err)
 	}
 }

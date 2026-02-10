@@ -125,7 +125,6 @@ func combinations(n, k int) [][]int {
 	return result
 }
 
-
 // --- Generator ---
 
 // TestGenerateGoldenFixtures generates v2 golden test fixtures.
@@ -187,7 +186,7 @@ func TestGenerateGoldenFixtures(t *testing.T) {
 			Checksum: share.Checksum,
 			PEM:      share.Encode(),
 			Compact:  share.CompactEncode(),
-			Words:    strings.Join(share.Words(), " "),
+			Words:    func() string { w, _ := share.Words(); return strings.Join(w, " ") }(),
 		}
 	}
 
@@ -582,7 +581,10 @@ func TestGoldenV2WordEncoding(t *testing.T) {
 				Index:   gs.Index,
 				Data:    data,
 			}
-			words := share.Words()
+			words, err := share.Words()
+			if err != nil {
+				t.Fatalf("Words() error: %v", err)
+			}
 			got := strings.Join(words, " ")
 			if got != gs.Words {
 				t.Errorf("word encoding mismatch:\n  got:  %s\n  want: %s", got, gs.Words)

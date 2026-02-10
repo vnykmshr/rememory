@@ -551,7 +551,7 @@ declare const t: TranslationFunction;
     } else {
       // Try to extract BIP39 words from the pasted text
       const extractedWords = extractWordsFromText(content);
-      if (extractedWords.length >= 12) {
+      if (extractedWords.length >= 25) {
         const wordResult = window.rememoryDecodeWords(extractedWords);
         if (!wordResult.error && wordResult.index > 0) {
           // Valid words found — add share directly (25th word provides the index)
@@ -1168,7 +1168,7 @@ declare const t: TranslationFunction;
       numbered.push({ idx: parseInt(m[1], 10), word: m[2].toLowerCase() });
     }
 
-    if (numbered.length >= 12) {
+    if (numbered.length >= 25) {
       // Sort by number to handle two-column grids correctly
       numbered.sort((a, b) => a.idx - b.idx);
       return numbered.map(e => e.word);

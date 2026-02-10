@@ -115,9 +115,9 @@ func GenerateReadme(data ReadmeData) string {
 	sb.WriteString("--------------------------------------------------------------------------------\n")
 
 	// Word list (primary human-readable format)
-	words := data.Share.Words()
+	words, _ := data.Share.Words()
 	if len(words) > 0 {
-		sb.WriteString("YOUR 25 RECOVERY WORDS:\n\n")
+		sb.WriteString(fmt.Sprintf("YOUR %d RECOVERY WORDS:\n\n", len(words)))
 		half := (len(words) + 1) / 2
 		for i := 0; i < half; i++ {
 			left := fmt.Sprintf("%2d. %-14s", i+1, words[i])
