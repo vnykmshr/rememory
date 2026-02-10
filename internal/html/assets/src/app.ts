@@ -982,6 +982,7 @@ declare const t: TranslationFunction;
       setStatus(t('combining'));
 
       const sharesForCombine: ShareInput[] = state.shares.map(s => ({
+        version: s.version,
         index: s.index,
         dataB64: s.dataB64
       }));

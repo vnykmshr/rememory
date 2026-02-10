@@ -7,7 +7,6 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
-	"encoding/base64"
 	"fmt"
 	"syscall/js"
 	"time"
@@ -158,8 +157,8 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 		return nil, fmt.Errorf("creating archive: %w", err)
 	}
 
-	// Generate random passphrase
-	passphrase, err := crypto.GeneratePassphrase(crypto.DefaultPassphraseBytes)
+	// Generate random passphrase (v2: split raw bytes, not the base64 string)
+	raw, passphrase, err := crypto.GenerateRawPassphrase(crypto.DefaultPassphraseBytes)
 	if err != nil {
 		return nil, fmt.Errorf("generating passphrase: %w", err)
 	}
@@ -175,7 +174,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 	// Split passphrase using Shamir's Secret Sharing
 	n := len(config.Friends)
 	k := config.Threshold
-	rawShares, err := core.Split([]byte(passphrase), n, k)
+	rawShares, err := core.Split(raw, n, k)
 	if err != nil {
 		return nil, fmt.Errorf("splitting passphrase: %w", err)
 	}
@@ -194,7 +193,7 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 	// Create all shares first
 	for i, friend := range config.Friends {
 		share := &core.Share{
-			Version:   1,
+			Version:   2,
 			Index:     i + 1,
 			Total:     n,
 			Threshold: k,
@@ -522,19 +521,23 @@ func encryptAgeJS(this js.Value, args []js.Value) any {
 	})
 }
 
-// splitPassphraseJS splits a passphrase using Shamir's Secret Sharing.
-// Args: passphrase (string), n (int), k (int)
+// splitPassphraseJS splits raw passphrase bytes using Shamir's Secret Sharing.
+// Args: rawBytes (Uint8Array), n (int), k (int)
 // Returns: { shares: [{index, dataB64}], error: string|null }
 func splitPassphraseJS(this js.Value, args []js.Value) any {
 	if len(args) < 3 {
-		return errorResult("missing arguments (need passphrase, n, k)")
+		return errorResult("missing arguments (need rawBytes, n, k)")
 	}
 
-	passphrase := args[0].String()
+	jsData := args[0]
+	dataLen := jsData.Get("length").Int()
+	rawBytes := make([]byte, dataLen)
+	js.CopyBytesToGo(rawBytes, jsData)
+
 	n := args[1].Int()
 	k := args[2].Int()
 
-	shares, err := core.Split([]byte(passphrase), n, k)
+	shares, err := core.Split(rawBytes, n, k)
 	if err != nil {
 		return errorResult(err.Error())
 	}
@@ -573,13 +576,16 @@ func createShareJS(this js.Value, args []js.Value) any {
 		return errorResult(fmt.Sprintf("invalid base64 data: %v", err))
 	}
 
-	created, err := time.Parse(time.RFC3339, createdStr)
+	created, err := time.Parse("2006-01-02 15:04", createdStr)
+	if err != nil {
+		created, err = time.Parse(time.RFC3339, createdStr)
+	}
 	if err != nil {
 		return errorResult(fmt.Sprintf("invalid created time: %v", err))
 	}
 
 	share := &core.Share{
-		Version:   1,
+		Version:   2,
 		Index:     index,
 		Total:     total,
 		Threshold: threshold,

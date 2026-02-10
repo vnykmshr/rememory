@@ -34,6 +34,7 @@ install: wasm
 	go install $(LDFLAGS) ./cmd/rememory
 
 test:
+	@test -f internal/html/assets/app.js && test -f $(BINARY) || $(MAKE) build
 	go test -v ./...
 
 test-cover:
@@ -59,6 +60,7 @@ clean:
 	rm -f internal/html/assets/recover.wasm internal/html/assets/create.wasm
 	rm -f internal/html/assets/app.js internal/html/assets/create-app.js internal/html/assets/shared.js internal/html/assets/types.js
 	rm -rf dist/ man/
+	go clean -testcache
 
 # Generate man pages
 man: build

@@ -1,0 +1,55 @@
+{
+  "version": 2,
+  "passphrase": "dGhpc19pc19hX3Rlc3RfcGFzc3BocmFzZV92Ml9nbGQ",
+  "total": 5,
+  "threshold": 3,
+  "created": "2025-01-01 00:00",
+  "shares": [
+    {
+      "index": 1,
+      "holder": "Alice",
+      "data_hex": "905e0a74b3affca8bb1923da4bd0e26771b1c493d9294fe270276bb2f6fbfb15db",
+      "checksum": "sha256:b94ca626f5a0ebb59c08e623d5d71819cab3650957db9325de4d525908e94a14",
+      "pem": "-----BEGIN REMEMORY SHARE-----\nVersion: 2\nIndex: 1\nTotal: 5\nThreshold: 3\nHolder: Alice\nCreated: 2025-01-01 00:00\nChecksum: sha256:b94ca626f5a0ebb59c08e623d5d71819cab3650957db9325de4d525908e94a14\n\nkF4KdLOv/Ki7GSPaS9DiZ3GxxJPZKU/icCdrsvb7+xXb\n-----END REMEMORY SHARE-----\n",
+      "compact": "RM2:1:5:3:kF4KdLOv_Ki7GSPaS9DiZ3GxxJPZKU_icCdrsvb7-xXb:b94c"
+    },
+    {
+      "index": 2,
+      "holder": "Bob",
+      "data_hex": "b19c9e0e4639bd094fe8c60c9a5508f5111e50c97f293065ad1f975755727d8f65",
+      "checksum": "sha256:f22b15c3b3837ae7a77cd98288755d37464f67d5212c016ab63a4cae926fef1b",
+      "pem": "-----BEGIN REMEMORY SHARE-----\nVersion: 2\nIndex: 2\nTotal: 5\nThreshold: 3\nHolder: Bob\nCreated: 2025-01-01 00:00\nChecksum: sha256:f22b15c3b3837ae7a77cd98288755d37464f67d5212c016ab63a4cae926fef1b\n\nsZyeDkY5vQlP6MYMmlUI9REeUMl/KTBlrR+XV1VyfY9l\n-----END REMEMORY SHARE-----\n",
+      "compact": "RM2:2:5:3:sZyeDkY5vQlP6MYMmlUI9REeUMl_KTBlrR-XV1VyfY9l:f22b"
+    },
+    {
+      "index": 3,
+      "holder": "Carol",
+      "data_hex": "020e0c02d486b6f6e1191a9e971c98f5753674f3fb07269dae1dab24be6732f476",
+      "checksum": "sha256:5d97ad7e3abfd4fa91183e9da756c6fedb2b1329e6c7b385e4b7d1b56a8ecce5",
+      "pem": "-----BEGIN REMEMORY SHARE-----\nVersion: 2\nIndex: 3\nTotal: 5\nThreshold: 3\nHolder: Carol\nCreated: 2025-01-01 00:00\nChecksum: sha256:5d97ad7e3abfd4fa91183e9da756c6fedb2b1329e6c7b385e4b7d1b56a8ecce5\n\nAg4MAtSGtvbhGRqelxyY9XU2dPP7Byadrh2rJL5nMvR2\n-----END REMEMORY SHARE-----\n",
+      "compact": "RM2:3:5:3:Ag4MAtSGtvbhGRqelxyY9XU2dPP7Byadrh2rJL5nMvR2:5d97"
+    },
+    {
+      "index": 4,
+      "holder": "David",
+      "data_hex": "a2474c9d2817c2db9e009129e02fc743632a6e017d6fdab49b943c201e2767248b",
+      "checksum": "sha256:1b11c0065b3d56168f4333bcb1594dbb4e70357b8cabeebed5b91d1fd9fb64c6",
+      "pem": "-----BEGIN REMEMORY SHARE-----\nVersion: 2\nIndex: 4\nTotal: 5\nThreshold: 3\nHolder: David\nCreated: 2025-01-01 00:00\nChecksum: sha256:1b11c0065b3d56168f4333bcb1594dbb4e70357b8cabeebed5b91d1fd9fb64c6\n\nokdMnSgXwtueAJEp4C/HQ2MqbgF9b9q0m5Q8IB4nZySL\n-----END REMEMORY SHARE-----\n",
+      "compact": "RM2:4:5:3:okdMnSgXwtueAJEp4C_HQ2MqbgF9b9q0m5Q8IB4nZySL:1b11"
+    },
+    {
+      "index": 5,
+      "holder": "Eve",
+      "data_hex": "5c33de015b43db487cafcfdbb5e1a2b4fbe13d227e1dc403577a81940086c7ac27",
+      "checksum": "sha256:242b22ded01926df7dba5f8caed34976793fc8acd26d3a1f08ceff7739f11d43",
+      "pem": "-----BEGIN REMEMORY SHARE-----\nVersion: 2\nIndex: 5\nTotal: 5\nThreshold: 3\nHolder: Eve\nCreated: 2025-01-01 00:00\nChecksum: sha256:242b22ded01926df7dba5f8caed34976793fc8acd26d3a1f08ceff7739f11d43\n\nXDPeAVtD20h8r8/bteGitPvhPSJ+HcQDV3qBlACGx6wn\n-----END REMEMORY SHARE-----\n",
+      "compact": "RM2:5:5:3:XDPeAVtD20h8r8_bteGitPvhPSJ-HcQDV3qBlACGx6wn:242b"
+    }
+  ],
+  "manifest": {
+    "files": {
+      "manifest/README.md": "# Golden Test Manifest\n\nThis is a test manifest for v1 golden fixtures.\n",
+      "manifest/secret.txt": "The secret passphrase is: correct-horse-battery-staple\n"
+    }
+  }
+}

@@ -41,6 +41,7 @@ func combineSharesJS(this js.Value, args []js.Value) any {
 	for i := 0; i < length; i++ {
 		shareObj := sharesArray.Index(i)
 		shares[i] = ShareData{
+			Version: shareObj.Get("version").Int(),
 			Index:   shareObj.Get("index").Int(),
 			DataB64: shareObj.Get("dataB64").String(),
 		}

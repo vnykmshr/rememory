@@ -28,6 +28,7 @@ type ShareInfo struct {
 
 // ShareData is minimal data needed for combining.
 type ShareData struct {
+	Version int
 	Index   int
 	DataB64 string
 }
@@ -81,6 +82,13 @@ func combineShares(shares []ShareData) (string, error) {
 		return "", fmt.Errorf("need at least 2 shares, got %d", len(shares))
 	}
 
+	// Validate all shares have the same version
+	for i := 1; i < len(shares); i++ {
+		if shares[i].Version != shares[0].Version {
+			return "", fmt.Errorf("share %d has different version (v%d vs v%d) — all shares must be from the same bundle", i+1, shares[i].Version, shares[0].Version)
+		}
+	}
+
 	// Convert to raw bytes for core.Combine
 	rawShares := make([][]byte, len(shares))
 	for i, s := range shares {
@@ -97,7 +105,7 @@ func combineShares(shares []ShareData) (string, error) {
 		return "", fmt.Errorf("combining shares: %w", err)
 	}
 
-	return string(secret), nil
+	return core.RecoverPassphrase(secret, shares[0].Version), nil
 }
 
 // decryptManifest decrypts age-encrypted data using a passphrase.

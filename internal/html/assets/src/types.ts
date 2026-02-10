@@ -6,6 +6,7 @@
 // ============================================
 
 export interface ParsedShare {
+  version: number;
   index: number;
   threshold: number;
   total: number;
@@ -16,6 +17,7 @@ export interface ParsedShare {
 }
 
 export interface ShareInput {
+  version: number;
   index: number;
   dataB64: string;
 }
