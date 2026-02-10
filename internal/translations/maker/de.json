@@ -32,7 +32,7 @@
   "archiving": "Dateien werden vorbereitet...",
   "encrypting": "Dateien werden verschlüsselt...",
   "splitting": "Schlüssel wird aufgeteilt...",
-  "creating_bundle": "Umschlag für {0} wird erstellt...",
+
   "complete": "Alle Umschläge wurden erfolgreich erstellt!",
   "error": "Fehler: {0}",
   "validation_min_friends": "Du brauchst mindestens 2 Freunde",

@@ -32,7 +32,7 @@
   "archiving": "Preparando archivos...",
   "encrypting": "Cifrando archivos...",
   "splitting": "Dividiendo la clave...",
-  "creating_bundle": "Creando kit para {0}...",
+
   "complete": "¡Todos los kits fueron creados con éxito!",
   "error": "Error: {0}",
   "validation_min_friends": "Necesitas al menos 2 amigos",

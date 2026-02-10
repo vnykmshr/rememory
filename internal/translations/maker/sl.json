@@ -32,7 +32,7 @@
   "archiving": "Arhiviranje datotek ...",
   "encrypting": "Šifriranje arhiva ...",
   "splitting": "Razdeljevanje skrivnosti ...",
-  "creating_bundle": "Ustvarjanje svežnja za {0} ...",
+
   "complete": "Vsi svežnji so bili uspešno ustvarjeni!",
   "error": "Napaka: {0}",
   "validation_min_friends": "Potrebujete vsaj 2 prijatelja",

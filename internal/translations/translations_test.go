@@ -113,7 +113,6 @@ func TestTWithParameterSubstitution(t *testing.T) {
 		{"recover", "es", "need_more", []any{3}, "Faltan 3 partes"},
 		{"recover", "en", "loading", nil, "Preparing the recovery tool..."},
 		{"maker", "en", "loading", nil, "Preparing the bundle creator..."},
-		{"maker", "es", "creating_bundle", []any{"Alice"}, "Creando kit para Alice..."},
 	}
 
 	for _, tt := range tests {

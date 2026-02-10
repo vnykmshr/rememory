@@ -32,7 +32,7 @@
   "archiving": "Préparation des fichiers...",
   "encrypting": "Chiffrement des fichiers...",
   "splitting": "Division de la clé...",
-  "creating_bundle": "Création de l'enveloppe pour {0}...",
+
   "complete": "Toutes les enveloppes ont été créées avec succès !",
   "error": "Erreur : {0}",
   "validation_min_friends": "Vous avez besoin d'au moins 2 amis",
