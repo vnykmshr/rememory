@@ -6,6 +6,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"strings"
+
+	"github.com/eljojo/rememory/internal/translations"
 )
 
 // FriendInfo holds friend contact information for the UI.
@@ -31,6 +33,9 @@ type PersonalizationData struct {
 // personalization can be nil for a generic recover.html, or provided to personalize for a specific friend.
 func GenerateRecoverHTML(wasmBytes []byte, version, githubURL string, personalization *PersonalizationData) string {
 	html := recoverHTMLTemplate
+
+	// Embed translations
+	html = strings.Replace(html, "{{TRANSLATIONS}}", translations.GetTranslationsJS("recover"), 1)
 
 	// Embed styles
 	html = strings.Replace(html, "{{STYLES}}", stylesCSS, 1)
