@@ -14,11 +14,14 @@ var recoverFS embed.FS
 //go:embed maker/*.json
 var makerFS embed.FS
 
+//go:embed readme/*.json
+var readmeFS embed.FS
+
 // Languages lists all supported language codes.
 var Languages = []string{"en", "es", "de", "fr", "sl"}
 
 // GetTranslationsJS builds the JavaScript translations object for injection into HTML templates.
-// component must be "recover" or "maker".
+// component must be "recover", "maker", or "readme".
 // Returns a string like: { en: {...}, es: {...}, de: {...}, fr: {...}, sl: {...} }
 func GetTranslationsJS(component string) string {
 	fs := fsForComponent(component)
@@ -146,12 +149,32 @@ func GetComponentKeys(component string) ([]string, error) {
 	return keys, nil
 }
 
+// ReadmeFilename returns the translated README filename for a given language and extension.
+// e.g. ReadmeFilename("es", ".txt") returns "LEEME.txt"
+func ReadmeFilename(lang, ext string) string {
+	name := GetString("readme", lang, "readme_filename")
+	return name + ext
+}
+
+// IsReadmeFile checks whether a filename matches any translated README filename
+// with the given extension (e.g. ".txt" or ".pdf").
+func IsReadmeFile(filename, ext string) bool {
+	for _, lang := range Languages {
+		if filename == ReadmeFilename(lang, ext) {
+			return true
+		}
+	}
+	return false
+}
+
 func fsForComponent(component string) *embed.FS {
 	switch component {
 	case "recover":
 		return &recoverFS
 	case "maker":
 		return &makerFS
+	case "readme":
+		return &readmeFS
 	default:
 		return nil
 	}

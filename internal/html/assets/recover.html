@@ -175,6 +175,10 @@
 
     // Initialize language toggle buttons after DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
+      // If personalized with a language preference and no saved preference, use it
+      if (window.PERSONALIZATION && window.PERSONALIZATION.language && !localStorage.getItem('rememory-lang')) {
+        currentLang = window.PERSONALIZATION.language;
+      }
       setLanguage(currentLang);
 
       // Add click handlers

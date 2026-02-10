@@ -55,5 +55,9 @@
   "action_try_again": "Poskusi znova",
   "validation_title": "Nekatera polja je potrebno doplniti",
   "validation_message": "Izpolnite označena polja, preden ustvarite svežnje.",
-  "validation_guidance": "Obvezna polja so označena z zvezdico (*). Prepričajte se, da ima vsak prijatelj ime ter da ste dodali vsaj eno datoteko."
+  "validation_guidance": "Obvezna polja so označena z zvezdico (*). Prepričajte se, da ima vsak prijatelj ime ter da ste dodali vsaj eno datoteko.",
+  "language_label": "Jezik svežnja",
+  "language_default": "Privzeto",
+  "custom_language_label": "Lasten jezik",
+  "remove": "Odstrani"
 }

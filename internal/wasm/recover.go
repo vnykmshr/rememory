@@ -10,6 +10,7 @@ import (
 	"io"
 
 	"github.com/eljojo/rememory/internal/core"
+	"github.com/eljojo/rememory/internal/translations"
 )
 
 // ShareInfo contains parsed share metadata for JS interop.
@@ -160,16 +161,16 @@ func extractBundle(zipData []byte) (*BundleContents, error) {
 			return nil, fmt.Errorf("reading %s: %w", f.Name, err)
 		}
 
-		switch f.Name {
-		case "README.txt":
+		switch {
+		case translations.IsReadmeFile(f.Name, ".txt"):
 			readmeContent = string(data)
-		case "MANIFEST.age":
+		case f.Name == "MANIFEST.age":
 			manifestData = data
 		}
 	}
 
 	if readmeContent == "" {
-		return nil, fmt.Errorf("README.txt not found in bundle")
+		return nil, fmt.Errorf("README file not found in bundle")
 	}
 
 	// Parse share from README

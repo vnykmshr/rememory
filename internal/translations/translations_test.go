@@ -9,7 +9,7 @@ import (
 )
 
 func TestAllJSONFilesParseCorrectly(t *testing.T) {
-	for _, component := range []string{"recover", "maker"} {
+	for _, component := range []string{"recover", "maker", "readme"} {
 		for _, lang := range Languages {
 			t.Run(fmt.Sprintf("%s/%s", component, lang), func(t *testing.T) {
 				m, err := GetComponentTranslations(component, lang)
@@ -25,7 +25,7 @@ func TestAllJSONFilesParseCorrectly(t *testing.T) {
 }
 
 func TestAllLanguagesHaveSameKeys(t *testing.T) {
-	for _, component := range []string{"recover", "maker"} {
+	for _, component := range []string{"recover", "maker", "readme"} {
 		t.Run(component, func(t *testing.T) {
 			enKeys, err := GetComponentKeys(component)
 			if err != nil {
@@ -113,7 +113,7 @@ func TestTWithParameterSubstitution(t *testing.T) {
 		{"recover", "es", "need_more", []any{3}, "Faltan 3 partes"},
 		{"recover", "en", "loading", nil, "Preparing the recovery tool..."},
 		{"maker", "en", "loading", nil, "Preparing the bundle creator..."},
-		{"maker", "es", "creating_bundle", []any{"Alice"}, "Creando sobre para Alice..."},
+		{"maker", "es", "creating_bundle", []any{"Alice"}, "Creando kit para Alice..."},
 	}
 
 	for _, tt := range tests {
@@ -196,6 +196,7 @@ func TestMakerHasExpectedKeys(t *testing.T) {
 		"generate_btn", "download_all_btn",
 		"add_friend", "threshold_label",
 		"error_title", "action_try_again",
+		"language_label", "language_default",
 	}
 
 	keys, err := GetComponentKeys("maker")
@@ -212,5 +213,63 @@ func TestMakerHasExpectedKeys(t *testing.T) {
 		if !keyMap[expected] {
 			t.Errorf("maker is missing expected key %q", expected)
 		}
+	}
+}
+
+func TestReadmeHasExpectedKeys(t *testing.T) {
+	expectedKeys := []string{
+		"title", "for", "warning_cannot_alone",
+		"warning_need_friends", "warning_need_shares",
+		"warning_confidential", "warning_keep_safe",
+		"what_is_this", "what_bundle_for", "what_one_of", "what_threshold",
+		"other_holders", "contact_label",
+		"recover_browser", "recover_step1", "recover_share_loaded",
+		"recover_step2", "recover_step2_drag", "recover_step2_click",
+		"recover_offline", "recover_cli", "recover_cli_hint", "recover_cli_usage",
+		"your_share", "recovery_words_title", "recovery_words_hint",
+		"machine_readable", "metadata_footer",
+		"readme_filename",
+	}
+
+	keys, err := GetComponentKeys("readme")
+	if err != nil {
+		t.Fatalf("failed to get readme keys: %v", err)
+	}
+
+	keyMap := make(map[string]bool)
+	for _, k := range keys {
+		keyMap[k] = true
+	}
+
+	for _, expected := range expectedKeys {
+		if !keyMap[expected] {
+			t.Errorf("readme is missing expected key %q", expected)
+		}
+	}
+}
+
+func TestReadmeTranslation(t *testing.T) {
+	// Test English
+	got := T("readme", "en", "title")
+	if got != "REMEMORY RECOVERY BUNDLE" {
+		t.Errorf("readme/en/title = %q, want %q", got, "REMEMORY RECOVERY BUNDLE")
+	}
+
+	// Test Spanish
+	got = T("readme", "es", "title")
+	if got != "KIT DE RECUPERACIÓN REMEMORY" {
+		t.Errorf("readme/es/title = %q, want %q", got, "KIT DE RECUPERACIÓN REMEMORY")
+	}
+
+	// Test parameter substitution
+	got = T("readme", "en", "for", "Alice")
+	if got != "For: Alice" {
+		t.Errorf("readme/en/for(Alice) = %q, want %q", got, "For: Alice")
+	}
+
+	// Test fallback to English for unknown language
+	got = T("readme", "xx", "title")
+	if got != "REMEMORY RECOVERY BUNDLE" {
+		t.Errorf("readme/xx/title should fall back to English, got %q", got)
 	}
 }
