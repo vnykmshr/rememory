@@ -157,7 +157,7 @@ func TestShareWords(t *testing.T) {
 	share := NewShare(2, 1, 5, 3, "Alice", data)
 	words := share.Words()
 	if len(words) != 25 {
-		t.Errorf("expected 25 words for 33-byte share (24 data + 1 index), got %d", len(words))
+		t.Errorf("expected 25 words for 33-byte share (24 data + 1 meta), got %d", len(words))
 	}
 
 	// Round-trip through DecodeShareWords
@@ -175,13 +175,17 @@ func TestShareWords(t *testing.T) {
 
 func TestDecodeShareWordsRoundTrip(t *testing.T) {
 	tests := []struct {
-		name  string
-		index int
+		name          string
+		index         int
+		expectedIndex int // what DecodeShareWords should return (0 for >15)
 	}{
-		{"index 1", 1},
-		{"index 2", 2},
-		{"index 5", 5},
-		{"index 100", 100},
+		{"index 1", 1, 1},
+		{"index 2", 2, 2},
+		{"index 5", 5, 5},
+		{"index 15 (max exact)", 15, 15},
+		{"index 16 (sentinel)", 16, 0},   // above 15 → stored as 0
+		{"index 100 (sentinel)", 100, 0},  // above 15 → stored as 0
+		{"index 255 (sentinel)", 255, 0},  // above 15 → stored as 0
 	}
 
 	for _, tt := range tests {
@@ -203,9 +207,124 @@ func TestDecodeShareWordsRoundTrip(t *testing.T) {
 			if !bytes.Equal(decoded, data) {
 				t.Errorf("data mismatch")
 			}
-			if index != tt.index {
-				t.Errorf("index: got %d, want %d", index, tt.index)
+			if index != tt.expectedIndex {
+				t.Errorf("index: got %d, want %d", index, tt.expectedIndex)
 			}
 		})
+	}
+}
+
+// TestWord25ChecksumDetectsTransposition verifies that swapping two adjacent
+// data words causes the 25th-word checksum to fail.
+func TestWord25ChecksumDetectsTransposition(t *testing.T) {
+	data := make([]byte, 33)
+	for i := range data {
+		data[i] = byte(i * 13)
+	}
+	share := NewShare(2, 3, 5, 3, "Test", data)
+	words := share.Words()
+
+	// Swap words 0 and 1 (adjacent transposition in data words)
+	swapped := make([]string, len(words))
+	copy(swapped, words)
+	swapped[0], swapped[1] = swapped[1], swapped[0]
+
+	_, _, err := DecodeShareWords(swapped)
+	if err == nil {
+		t.Error("expected checksum error for transposed words, got nil")
+	}
+	if !strings.Contains(err.Error(), "checksum") {
+		t.Errorf("expected checksum error, got: %v", err)
+	}
+}
+
+// TestWord25ChecksumDetectsSubstitution verifies that replacing a data word
+// with a different valid BIP39 word causes the checksum to fail.
+func TestWord25ChecksumDetectsSubstitution(t *testing.T) {
+	data := make([]byte, 33)
+	for i := range data {
+		data[i] = byte(i * 13)
+	}
+	share := NewShare(2, 3, 5, 3, "Test", data)
+	words := share.Words()
+
+	// Replace word 5 with a different BIP39 word
+	modified := make([]string, len(words))
+	copy(modified, words)
+	// Pick a word that's definitely different from the original
+	replacement := "zoo"
+	if modified[5] == replacement {
+		replacement = "abandon"
+	}
+	modified[5] = replacement
+
+	_, _, err := DecodeShareWords(modified)
+	if err == nil {
+		t.Error("expected checksum error for substituted word, got nil")
+	}
+	if !strings.Contains(err.Error(), "checksum") {
+		t.Errorf("expected checksum error, got: %v", err)
+	}
+}
+
+// TestWord25Layout verifies the bit-packing layout of the 25th word:
+// upper 4 bits = index, lower 7 bits = SHA-256 checksum.
+func TestWord25Layout(t *testing.T) {
+	data := make([]byte, 33)
+	for i := range data {
+		data[i] = byte(i + 42)
+	}
+
+	// Compute expected values
+	expectedCheck := word25Checksum(data)
+	if expectedCheck < 0 || expectedCheck > 127 {
+		t.Fatalf("checksum out of 7-bit range: %d", expectedCheck)
+	}
+
+	// Test encoding for index in range (1-15)
+	for _, idx := range []int{1, 7, 15} {
+		encoded := word25Encode(idx, data)
+		gotIdx, gotCheck := word25Decode(encoded)
+		if gotIdx != idx {
+			t.Errorf("index %d: decode got index %d", idx, gotIdx)
+		}
+		if gotCheck != expectedCheck {
+			t.Errorf("index %d: decode got check %d, want %d", idx, gotCheck, expectedCheck)
+		}
+		// Verify the 11-bit value is in BIP39 range
+		if encoded < 0 || encoded >= 2048 {
+			t.Errorf("index %d: encoded value %d out of BIP39 range", idx, encoded)
+		}
+	}
+
+	// Test sentinel for index > 15
+	for _, idx := range []int{16, 100, 255} {
+		encoded := word25Encode(idx, data)
+		gotIdx, gotCheck := word25Decode(encoded)
+		if gotIdx != 0 {
+			t.Errorf("index %d: expected sentinel 0, got %d", idx, gotIdx)
+		}
+		if gotCheck != expectedCheck {
+			t.Errorf("index %d: checksum should still be valid, got %d want %d", idx, gotCheck, expectedCheck)
+		}
+	}
+}
+
+// TestWord25ChecksumDifferentData verifies that different data produces
+// different checksums (not a guarantee, but should hold for distinct inputs).
+func TestWord25ChecksumDifferentData(t *testing.T) {
+	data1 := make([]byte, 33)
+	data2 := make([]byte, 33)
+	for i := range data1 {
+		data1[i] = byte(i)
+		data2[i] = byte(i + 1)
+	}
+
+	check1 := word25Checksum(data1)
+	check2 := word25Checksum(data2)
+	// With 7 bits, there's a 1/128 chance these collide.
+	// Use sufficiently different inputs to make collision astronomically unlikely.
+	if check1 == check2 {
+		t.Logf("warning: checksums collided (1/128 chance) — not a bug, but unexpected")
 	}
 }

@@ -121,8 +121,9 @@ func extractTarGz(tarGzData []byte) ([]core.ExtractedFile, error) {
 }
 
 // decodeShareWords converts 25 BIP39 words to raw share data bytes and share index.
-// The first 24 words encode the data; the 25th word encodes the share index.
-// Returns the decoded bytes, share index, checksum, and any error.
+// The first 24 words encode the data; the 25th word packs 4 bits of index + 7 bits of checksum.
+// Returns the decoded bytes, share index (0 if share >15), checksum, and any error.
+// Returns an error if the embedded checksum doesn't match (wrong word order, typos, etc.).
 func decodeShareWords(words []string) ([]byte, int, string, error) {
 	data, index, err := core.DecodeShareWords(words)
 	if err != nil {

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"strings"
 	"sync"
@@ -99,29 +100,77 @@ func set11Bits(data []byte, bitOffset int, val int) {
 	}
 }
 
+// Word 25 layout (11 bits total):
+//
+//   ┌─────────────┬──────────────────────┐
+//   │ index (4 hi) │   checksum (7 lo)    │
+//   │  bits 10-7   │     bits 6-0         │
+//   └─────────────┴──────────────────────┘
+//
+// Index: share index (1-based) stored in upper 4 bits.
+//   - Shares 1–15: index stored directly.
+//   - Shares 16+:  index set to 0 (sentinel for "unknown").
+//     The system still works — the share data contains the Shamir
+//     x-coordinate needed for Combine(). The UI just can't identify
+//     which specific friend this share belongs to.
+//
+// Checksum: lower 7 bits of SHA-256(data_bytes)[0].
+//   - Catches transpositions, word ordering mistakes, and typos that
+//     happen to be valid BIP39 words.
+//   - False positive rate: 1/128 (~0.8%).
+const (
+	word25IndexBits    = 4
+	word25CheckBits    = 7
+	word25MaxIndex     = (1 << word25IndexBits) - 1 // 15
+	word25CheckMask    = (1 << word25CheckBits) - 1  // 0x7F
+)
+
+// word25Checksum computes the 7-bit checksum for the 25th word.
+// It hashes the raw share data bytes and returns the lower 7 bits of byte 0.
+func word25Checksum(data []byte) int {
+	h := sha256.Sum256(data)
+	return int(h[0]) & word25CheckMask
+}
+
+// word25Encode packs a share index and data checksum into an 11-bit BIP39 word index.
+func word25Encode(shareIndex int, data []byte) int {
+	idx := shareIndex
+	if idx > word25MaxIndex {
+		idx = 0 // sentinel: index not representable in 4 bits
+	}
+	check := word25Checksum(data)
+	return (idx << word25CheckBits) | check
+}
+
+// word25Decode unpacks the 25th word's 11-bit value into index and checksum.
+func word25Decode(val int) (index int, checksum int) {
+	return val >> word25CheckBits, val & word25CheckMask
+}
+
 // Words returns this share's data encoded as 25 BIP39 words.
-// The first 24 words encode the share data (33 bytes = 264 bits).
-// The 25th word encodes the share index (1-based) as a BIP39 word.
+// The first 24 words encode the share data (33 bytes = 264 bits, 11 bits per word).
+// The 25th word packs 4 bits of share index + 7 bits of checksum (see word25 layout above).
 func (s *Share) Words() []string {
 	words := EncodeWords(s.Data)
-	if s.Index >= 0 && s.Index < len(bip39English) {
-		words = append(words, bip39English[s.Index])
-	}
+	bip39Idx := word25Encode(s.Index, s.Data)
+	words = append(words, bip39English[bip39Idx])
 	return words
 }
 
 // DecodeShareWords decodes 25 BIP39 words into share data and index.
-// The first 24 words are decoded to bytes; the 25th word gives the share index.
+// The first 24 words are decoded to bytes; the 25th word carries index + checksum.
+// Returns index=0 if the share index was > 15 (the sentinel value).
+// Returns an error if the checksum doesn't match (wrong word order, typos, etc.).
 func DecodeShareWords(words []string) (data []byte, index int, err error) {
 	if len(words) < 2 {
 		return nil, 0, fmt.Errorf("need at least 2 words")
 	}
 
-	// The last word encodes the share index
+	// Look up the 25th word in the BIP39 list
 	lastWord := strings.ToLower(strings.TrimSpace(words[len(words)-1]))
 	initWordIndex()
 
-	idx, ok := wordIndex[lastWord]
+	bip39Idx, ok := wordIndex[lastWord]
 	if !ok {
 		suggestion := SuggestWord(lastWord)
 		if suggestion != "" {
@@ -136,7 +185,16 @@ func DecodeShareWords(words []string) (data []byte, index int, err error) {
 		return nil, 0, err
 	}
 
-	return data, idx, nil
+	// Unpack index and checksum from the 25th word
+	index, expectedCheck := word25Decode(bip39Idx)
+
+	// Verify checksum against the decoded data
+	actualCheck := word25Checksum(data)
+	if actualCheck != expectedCheck {
+		return nil, 0, fmt.Errorf("word checksum failed — check word order and spelling")
+	}
+
+	return data, index, nil
 }
 
 // SuggestWord finds the closest BIP39 word by Levenshtein distance (max 2).
