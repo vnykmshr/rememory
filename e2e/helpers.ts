@@ -145,7 +145,8 @@ export class RecoveryPage {
   }
 
   async expectNeedMoreShares(count: number): Promise<void> {
-    await expect(this.page.locator('#threshold-info')).toContainText(`Waiting for ${count} more piece`);
+    const expected = count === 1 ? 'Waiting for the last piece' : `Waiting for ${count} more pieces`;
+    await expect(this.page.locator('#threshold-info')).toContainText(expected);
   }
 
   async expectManifestLoaded(): Promise<void> {

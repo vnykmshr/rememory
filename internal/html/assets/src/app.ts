@@ -843,8 +843,9 @@ declare const t: TranslationFunction;
     // Update threshold info
     if (state.threshold > 0 && elements.thresholdInfo) {
       const needed = Math.max(0, state.threshold - state.shares.length);
+      const needLabel = needed === 1 ? t('need_more_one') : t('need_more', needed);
       elements.thresholdInfo.innerHTML = needed > 0
-        ? `&#128274; ${t('need_more', needed)} (${t('shares_of', state.shares.length, state.threshold)})`
+        ? `&#128274; ${needLabel} (${t('shares_of', state.shares.length, state.threshold)})`
         : `&#9989; ${t('ready')} (${t('shares_of', state.shares.length, state.threshold)})`;
       elements.thresholdInfo.className = 'threshold-info' + (needed === 0 ? ' ready' : '');
       elements.thresholdInfo.classList.remove('hidden');
