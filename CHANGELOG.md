@@ -2,6 +2,10 @@
 
 All notable changes to ReMemory are documented here.
 
+## Unreleased
+
+- **PDF visual hierarchy redesign** — The README PDF now reads like a certificate. It also shows the recovery rule ("2 of 3 required"). Same content, clearer hierarchy.
+
 ## v0.0.10 — 2026-02-11
 
 - **Embedded manifest in recovery bundles** — If your encrypted manifest is under 5 MB, it's now embedded directly inside `recover.html`. Friends can recover secrets without needing the separate `MANIFEST.age` file at all — just open the HTML file and go.

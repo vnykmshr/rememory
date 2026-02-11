@@ -58,5 +58,7 @@
   "machine_readable": "STROJNO BERLJIV FORMAT (lahko tudi naložite celotno datoteko):",
   "metadata_footer": "NOGA Z METAPODATKI (strojno razčlenljiva)",
   "qr_caption": "Skenirajte to s kamero telefona za uvoz vašega dela",
+  "recovery_rule": "PRAVILO OBNOVITVE",
+  "recovery_rule_count": "{0} od {1} potrebnih",
   "readme_filename": "PREBERI"
 }

@@ -58,5 +58,7 @@
   "machine_readable": "MACHINE-READABLE FORMAT (you can also upload this entire file):",
   "metadata_footer": "METADATA FOOTER (machine-parseable)",
   "qr_caption": "Scan this with your phone camera to import your share",
+  "recovery_rule": "RECOVERY RULE",
+  "recovery_rule_count": "{0} of {1} required",
   "readme_filename": "README"
 }
