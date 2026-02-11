@@ -23,6 +23,7 @@
   "remove": "Eliminar",
   "loaded": "cargado",
   "manifest_loaded_bundle": "cargado del kit",
+  "manifest_loaded_embedded": "precargado",
   "combining": "Uniendo las partes...",
   "decrypting": "Desbloqueando el archivo...",
   "reading": "Abriendo el archivo...",

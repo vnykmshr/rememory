@@ -7,6 +7,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	"encoding/base64"
 	"fmt"
 	"syscall/js"
 	"time"
@@ -264,6 +265,12 @@ func createBundles(config CreateBundlesConfig) ([]BundleOutput, error) {
 			Total:        n,
 			Language:     lang,
 		}
+
+		// Embed manifest in recover.html when small enough
+		if len(manifestData) <= html.MaxEmbeddedManifestSize {
+			personalization.ManifestB64 = base64.StdEncoding.EncodeToString(manifestData)
+		}
+
 		recoverHTML := html.GenerateRecoverHTML(wasmBytes, config.Version, config.GitHubURL, personalization)
 		recoverChecksum := core.HashString(recoverHTML)
 

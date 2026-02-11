@@ -44,9 +44,11 @@ test.describe('Browser Recovery Tool', () => {
 
     await recovery.open();
     await recovery.expectUIElements();
+    // Manifest should be pre-loaded (embedded in personalization)
+    await recovery.expectManifestLoaded();
   });
 
-  test('personalized recover.html pre-loads holder share', async ({ page }) => {
+  test('personalized recover.html pre-loads holder share and manifest', async ({ page }) => {
     const bundleDir = extractBundle(bundlesDir, 'Alice');
     const recovery = new RecoveryPage(page, bundleDir);
 
@@ -57,8 +59,8 @@ test.describe('Browser Recovery Tool', () => {
     await recovery.expectShareHolder('Alice');
     await recovery.expectHolderShareLabel();
 
-    // Manifest is NOT pre-loaded - user must load it
-    await recovery.expectManifestDropZoneVisible();
+    // Manifest is pre-loaded (embedded in recover.html for small manifests)
+    await recovery.expectManifestLoaded();
 
     // Still need 1 more share (threshold is 2)
     await recovery.expectNeedMoreShares(1);
@@ -290,6 +292,8 @@ test.describe('Anonymous Bundle Recovery', () => {
 
     await recovery.open();
     await recovery.expectUIElements();
+    // Manifest should be pre-loaded (embedded in personalization)
+    await recovery.expectManifestLoaded();
 
     // Share should be pre-loaded with synthetic name
     await recovery.expectShareCount(1);
@@ -434,6 +438,97 @@ test.describe('Generic recover.html (no personalization)', () => {
     // Recovery should complete automatically (threshold backfilled from Bob's share)
     await recovery.expectRecoveryComplete();
     await recovery.expectFileCount(3); // secret.txt, notes.txt, README.md
+    await recovery.expectDownloadVisible();
+  });
+});
+
+test.describe('Embedded Manifest Recovery', () => {
+  let projectDir: string;
+  let bundlesDir: string;
+
+  test.beforeAll(async () => {
+    const bin = getRememoryBin();
+    if (!fs.existsSync(bin)) {
+      test.skip();
+      return;
+    }
+
+    projectDir = createTestProject();
+    bundlesDir = path.join(projectDir, 'output', 'bundles');
+  });
+
+  test.afterAll(async () => {
+    if (projectDir && fs.existsSync(projectDir)) {
+      fs.rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+
+  test('embedded manifest auto-loads and recovery works without manual manifest upload', async ({ page }) => {
+    const [aliceDir, bobDir] = extractBundles(bundlesDir, ['Alice', 'Bob']);
+    const recovery = new RecoveryPage(page, aliceDir);
+
+    await recovery.open();
+
+    // Alice's share is pre-loaded, manifest is embedded
+    await recovery.expectShareCount(1);
+    await recovery.expectManifestLoaded();
+
+    // Add Bob's share — recovery should auto-trigger since manifest is already loaded
+    await recovery.addShares(bobDir);
+
+    await recovery.expectRecoveryComplete();
+    await recovery.expectFileCount(3);
+    await recovery.expectDownloadVisible();
+  });
+});
+
+test.describe('--no-embed-manifest flag', () => {
+  let noEmbedProjectDir: string;
+  let noEmbedBundlesDir: string;
+
+  test.beforeAll(async () => {
+    const bin = getRememoryBin();
+    if (!fs.existsSync(bin)) {
+      test.skip();
+      return;
+    }
+
+    noEmbedProjectDir = createTestProject({ noEmbedManifest: true });
+    noEmbedBundlesDir = path.join(noEmbedProjectDir, 'output', 'bundles');
+  });
+
+  test.afterAll(async () => {
+    if (noEmbedProjectDir && fs.existsSync(noEmbedProjectDir)) {
+      fs.rmSync(noEmbedProjectDir, { recursive: true, force: true });
+    }
+  });
+
+  test('manifest is not pre-loaded when --no-embed-manifest is used', async ({ page }) => {
+    const bundleDir = extractBundle(noEmbedBundlesDir, 'Alice');
+    const recovery = new RecoveryPage(page, bundleDir);
+
+    await recovery.open();
+
+    // Share is pre-loaded but manifest is NOT
+    await recovery.expectShareCount(1);
+    await recovery.expectManifestDropZoneVisible();
+  });
+
+  test('recovery still works with manual manifest when --no-embed-manifest is used', async ({ page }) => {
+    const [aliceDir, bobDir] = extractBundles(noEmbedBundlesDir, ['Alice', 'Bob']);
+    const recovery = new RecoveryPage(page, aliceDir);
+
+    await recovery.open();
+
+    // Manifest must be loaded manually
+    await recovery.addManifest();
+    await recovery.expectManifestLoaded();
+
+    // Add Bob's share
+    await recovery.addShares(bobDir);
+
+    await recovery.expectRecoveryComplete();
+    await recovery.expectFileCount(3);
     await recovery.expectDownloadVisible();
   });
 });

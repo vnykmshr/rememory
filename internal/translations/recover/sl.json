@@ -23,6 +23,7 @@
   "remove": "Odstrani",
   "loaded": "naloženo",
   "manifest_loaded_bundle": "naloženo iz svežnja",
+  "manifest_loaded_embedded": "prednaloženo",
   "combining": "Sestavljanje svežnjev skupaj ...",
   "decrypting": "Odklepanje arhiva ...",
   "reading": "Odpiranje arhiva ...",

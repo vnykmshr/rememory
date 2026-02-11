@@ -567,6 +567,8 @@
       <p style="margin-top: 1rem;">
         Each bundle is personalized: the <code>recover.html</code> has the friend's share pre-loaded
         and shows a contact list of other friends who hold shares.
+        When the encrypted manifest is 5 MB or less, it is also embedded in <code>recover.html</code>,
+        so friends only need to collect shares from others to complete recovery.
       </p>
 
       <h3 id="recovery-bundle">Path A: I Have the Bundle ZIP</h3>
@@ -587,7 +589,8 @@
         <div class="step-number">2</div>
         <div class="step-content">
           <h4>Load the encrypted manifest</h4>
-          <p>Drag and drop <code>MANIFEST.age</code> from the bundle onto the manifest area.</p>
+          <p>For small manifests (≤ 5 MB), this step is automatic—the manifest is already embedded in <code>recover.html</code>.
+          Otherwise, drag and drop <code>MANIFEST.age</code> from the bundle onto the manifest area.</p>
         </div>
       </div>
 

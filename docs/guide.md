@@ -257,7 +257,8 @@ Each bundle contains:
 - The `recover.html` is personalized for each friend:
   - Their share is pre-loaded automatically
   - Shows a contact list with other friends' info
-  - They only need to load the manifest and collect shares from others to complete recovery
+  - If the encrypted manifest is 5 MB or less, it's also embedded in `recover.html`—so friends only need to collect shares from others to complete recovery
+  - For larger manifests, they'll also need to load the separate `MANIFEST.age` file
 
 The README.txt includes:
 
@@ -327,8 +328,8 @@ When your friends need to recover your secrets:
    - They'll see a **contact list** showing other friends who hold shares
 
 2. **Load the encrypted manifest**
-   - Drag and drop `MANIFEST.age` from the bundle onto the manifest area
-   - Or click to browse and select it
+   - For small manifests (≤ 5 MB), this step is automatic—the manifest is embedded in `recover.html`
+   - Otherwise, drag and drop `MANIFEST.age` from the bundle onto the manifest area, or click to browse
 
 3. **Coordinate with other friends**
    - The contact list shows names, emails, and phone numbers

@@ -2,6 +2,7 @@ package bundle
 
 import (
 	"archive/zip"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -23,6 +24,7 @@ type Config struct {
 	GitHubReleaseURL string // URL to GitHub release for CLI download
 	WASMBytes        []byte // Compiled recover.wasm binary
 	RecoveryURL      string // Optional: base URL for QR code (e.g. "https://example.com/recover.html")
+	NoEmbedManifest  bool   // If true, do not embed MANIFEST.age in recover.html even when small enough
 }
 
 // GenerateAll creates bundles for all friends in the project.
@@ -90,6 +92,12 @@ func GenerateAll(p *project.Project, cfg Config) error {
 			Total:        len(p.Friends),
 			Language:     lang,
 		}
+
+		// Embed manifest in recover.html when small enough and not disabled
+		if !cfg.NoEmbedManifest && len(manifestData) <= html.MaxEmbeddedManifestSize {
+			personalization.ManifestB64 = base64.StdEncoding.EncodeToString(manifestData)
+		}
+
 		recoverHTML := html.GenerateRecoverHTML(cfg.WASMBytes, cfg.Version, cfg.GitHubReleaseURL, personalization)
 		recoverChecksum := core.HashString(recoverHTML)
 

@@ -265,6 +265,17 @@ declare const t: TranslationFunction;
       }
     }
 
+    // Load embedded manifest if available (included when MANIFEST.age is small enough)
+    if (personalization.manifestB64) {
+      const binary = atob(personalization.manifestB64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      state.manifest = bytes;
+      showManifestLoaded('MANIFEST.age', state.manifest.length, 'embedded');
+    }
+
     checkRecoverReady();
   }
 
@@ -807,7 +818,7 @@ declare const t: TranslationFunction;
 
     if (result.manifest && !state.manifest) {
       state.manifest = result.manifest;
-      showManifestLoaded('MANIFEST.age', state.manifest.length, true);
+      showManifestLoaded('MANIFEST.age', state.manifest.length, 'bundle');
     }
 
     checkRecoverReady();
@@ -958,14 +969,20 @@ declare const t: TranslationFunction;
     }
   }
 
-  function showManifestLoaded(filename: string, size: number, fromBundle = false): void {
+  function showManifestLoaded(filename: string, size: number, source: 'file' | 'bundle' | 'embedded' = 'file'): void {
     elements.manifestDropZone?.classList.add('hidden');
 
     if (elements.manifestStatus) {
+      const sourceLabels: Record<string, string> = {
+        file: t('loaded'),
+        bundle: t('manifest_loaded_bundle'),
+        embedded: t('manifest_loaded_embedded'),
+      };
+      const sourceLabel = sourceLabels[source] || t('loaded');
       elements.manifestStatus.innerHTML = `
         <span class="icon">&#9989;</span>
         <div style="flex: 1;">
-          <strong>${escapeHtml(filename)}</strong> ${fromBundle ? t('manifest_loaded_bundle') : t('loaded')}
+          <strong>${escapeHtml(filename)}</strong> ${sourceLabel}
           <div style="font-size: 0.875rem; color: #6c757d;">${formatSize(size)}</div>
         </div>
         <button class="clear-manifest" title="${t('remove')}">&times;</button>

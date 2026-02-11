@@ -23,6 +23,7 @@
   "remove": "Supprimer",
   "loaded": "chargé",
   "manifest_loaded_bundle": "chargé depuis le bundle",
+  "manifest_loaded_embedded": "préchargé",
   "combining": "Les parts se rassemblent...",
   "decrypting": "Déverrouillage de l'archive...",
   "reading": "Ouverture de l'archive...",

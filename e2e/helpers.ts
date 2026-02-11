@@ -21,8 +21,13 @@ export function generateStandaloneHTML(tmpDir: string, type: 'recover' | 'create
   return htmlPath;
 }
 
+// Options for test project creation
+interface TestProjectOptions {
+  noEmbedManifest?: boolean;
+}
+
 // Create a sealed test project with bundles
-export function createTestProject(): string {
+export function createTestProject(options: TestProjectOptions = {}): string {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rememory-e2e-'));
   const projectDir = path.join(tmpDir, 'test-project');
   const bin = getRememoryBin();
@@ -38,8 +43,9 @@ export function createTestProject(): string {
   fs.writeFileSync(path.join(manifestDir, 'notes.txt'), 'Remember to feed the cat!');
 
   // Seal and generate bundles
-  execSync(`${bin} seal`, { cwd: projectDir, stdio: 'inherit' });
-  execSync(`${bin} bundle`, { cwd: projectDir, stdio: 'inherit' });
+  const sealFlags = options.noEmbedManifest ? ' --no-embed-manifest' : '';
+  execSync(`${bin} seal${sealFlags}`, { cwd: projectDir, stdio: 'inherit' });
+  execSync(`${bin} bundle${sealFlags}`, { cwd: projectDir, stdio: 'inherit' });
 
   return projectDir;
 }
@@ -232,7 +238,7 @@ export class RecoveryPage {
   async expectUIElements(): Promise<void> {
     await expect(this.page.locator('h1')).toContainText('Recover Files');
     await expect(this.page.locator('#share-drop-zone')).toBeVisible();
-    await expect(this.page.locator('#manifest-drop-zone')).toBeVisible();
+    // Manifest drop zone may be hidden when manifest is embedded in personalization
   }
 
   // Dismiss dialogs (for duplicate share tests)
