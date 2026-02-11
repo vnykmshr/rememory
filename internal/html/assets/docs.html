@@ -408,6 +408,7 @@
           <li class="indent"><a href="#recovery-bundle">Path A: Bundle ZIP</a></li>
           <li class="indent"><a href="#recovery-pdf">Path B: Printed PDF</a></li>
           <li><a href="#best-practices">Best Practices</a></li>
+          <li class="indent"><a href="#revoking-access">Revoking Access</a></li>
           <li><a href="#cli">CLI Alternative</a></li>
           <li><a href="#anonymous">Anonymous Mode</a></li>
           <li><a href="#multilingual">Multilingual Bundles</a></li>
@@ -729,6 +730,34 @@
         <li>Relationships change</li>
         <li>New cryptographic best practices emerge</li>
       </ul>
+
+      <h3 id="revoking-access">Revoking Access</h3>
+      <p>
+        There is no way to remotely revoke a share once it has been distributed. This is by design —
+        the system is offline and serverless, so there is no central authority that can invalidate a share.
+      </p>
+      <p>
+        If you need to remove someone from your recovery group (e.g., a falling out, or you simply want
+        to change who holds shares), the only option is:
+      </p>
+      <ol>
+        <li><strong>Create new bundles</strong> with a new set of friends and a fresh passphrase</li>
+        <li><strong>Send new bundles</strong> to the friends you still trust</li>
+        <li><strong>Ask every remaining friend to delete their old bundle</strong> and replace it with the new one</li>
+      </ol>
+
+      <div class="warning">
+        <strong>Important:</strong> Old shares can still decrypt old manifests, so friends must not keep
+        old bundles "just in case." When you send someone a new bundle, be clear: delete the old one,
+        keep only the new one. No version history, no archives — just the latest bundle.
+      </div>
+
+      <p>
+        The same applies when you update your secrets (e.g., a password changed). Creating new bundles
+        generates a completely new passphrase and new shares. The old shares become useless for the new
+        manifest, but they still work with the old <code>MANIFEST.age</code>. Make sure friends aren't
+        holding on to old copies.
+      </p>
     </section>
 
     <section id="cli" class="doc-section">

@@ -19,6 +19,7 @@ This guide walks you through using ReMemory to create encrypted recovery bundles
 - [Best Practices](#best-practices)
 - [Project Structure](#project-structure)
 - [Commands Reference](#commands-reference)
+- [Revoking Access](#revoking-access)
 - [Advanced: Anonymous Mode](#advanced-anonymous-mode)
 - [Advanced: Multilingual Bundles](#advanced-multilingual-bundles)
 
@@ -411,6 +412,20 @@ You can copy friend configuration:
 ```bash
 rememory init new-project --from old-project
 ```
+
+### Revoking Access
+
+There is no way to remotely revoke a share once it has been distributed. This is by design — the system is offline and serverless, so there is no central authority that can invalidate a share.
+
+If you need to remove someone from your recovery group (e.g., a falling out, or you simply want to change who holds shares), the only option is:
+
+1. **Create a new project** with a new set of friends and a fresh passphrase
+2. **Send new bundles** to the friends you still trust
+3. **Ask every remaining friend to delete their old bundle** and replace it with the new one
+
+This last step is critical. Old shares can still decrypt old manifests, so friends must not keep old bundles "just in case." When you send someone a new bundle, be clear: **delete the old one, keep only the new one.** No version history, no archives — just the latest bundle.
+
+The same applies when you update your secrets (e.g., a password changed). Sealing a new project generates a completely new passphrase and new shares. The old shares become useless for the new manifest, but they still work with the old `MANIFEST.age`. Make sure friends aren't holding on to old copies.
 
 ## Project Structure
 
