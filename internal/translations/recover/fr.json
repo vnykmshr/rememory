@@ -1,7 +1,8 @@
 {
   "loading": "Préparation de l'outil de récupération...",
-  "title": "🧠 Récupération ReMemory",
-  "subtitle": "Quand tout devient compliqué, on peut compter sur ses amis",
+  "title": "Récupérer les fichiers",
+  "subtitle": "Combinez les parts que vos amis ont gardées pour déverrouiller vos fichiers.",
+  "page_description": "Chaque ami a reçu une enveloppe contenant sa part de la clé. Rassemblez suffisamment de parts ci-dessous, ajoutez l'archive chiffrée, et vos fichiers seront déchiffrés ici même dans le navigateur. Rien n'est envoyé nulle part.",
   "step1_title": "Rassembler les parts",
   "step1_drop": "Déposez les fichiers README.txt ici ou sélectionnez-les",
   "step1_hint": "Chaque fichier contient la part d'une personne",

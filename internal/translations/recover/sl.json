@@ -1,7 +1,8 @@
 {
   "loading": "Pripravljenje orodja za obnovitev ...",
-  "title": "🧠 ReMemory Recovery",
-  "subtitle": "Orodje narejeno za prijatelje, da se združijo v težkih časih ...",
+  "title": "Obnovitev datotek",
+  "subtitle": "Združite dele, ki so jih vaši prijatelji shranili, da odklenete svoje datoteke.",
+  "page_description": "Vsak prijatelj je prejel sveženj s svojim delom ključa. Zberite dovolj delov spodaj, dodajte šifrirani arhiv in vaše datoteke bodo dešifrirane tukaj v brskalniku. Nič se ne naloži nikamor.",
   "step1_title": "Zberite svežnje",
   "step1_drop": "Spustite datoteke README.txt tukaj ali kliknite za izbiro datotek iz naprave",
   "step1_hint": "Vsaka datoteka vsebuje sveženj enega prijatelja",

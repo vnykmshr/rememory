@@ -1,7 +1,8 @@
 {
   "loading": "Preparing the recovery tool...",
-  "title": "🧠 ReMemory Recovery",
-  "subtitle": "A tool made for friends to unite in trying times...",
+  "title": "Recover Files",
+  "subtitle": "Combine the pieces your friends kept safe to unlock your files.",
+  "page_description": "Each friend received a bundle with their piece of the key. Gather enough pieces below, add the encrypted archive, and your files will be decrypted right here in the browser. Nothing is uploaded anywhere.",
   "step1_title": "Gather the pieces",
   "step1_drop": "Drop the README.txt files here, or click to choose them",
   "step1_hint": "Each file holds one person's piece",

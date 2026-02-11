@@ -1,7 +1,8 @@
 {
   "loading": "Wiederherstellung wird vorbereitet...",
-  "title": "🧠 ReMemory Wiederherstellung",
-  "subtitle": "Wenn alles schwer wirkt, kann man sich auf Freunde verlassen",
+  "title": "Dateien wiederherstellen",
+  "subtitle": "Kombiniere die Teile, die deine Freunde aufbewahrt haben, um deine Dateien zu entsperren.",
+  "page_description": "Jeder Freund hat einen Umschlag mit seinem Teil des Schlüssels erhalten. Sammle unten genügend Teile, füge das verschlüsselte Archiv hinzu, und deine Dateien werden direkt hier im Browser entschlüsselt. Nichts wird irgendwohin hochgeladen.",
   "step1_title": "Teile sammeln",
   "step1_drop": "README.txt-Dateien hierher ziehen oder auswählen",
   "step1_hint": "Jede Datei enthält den Teil einer Person",

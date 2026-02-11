@@ -1,7 +1,8 @@
 {
   "loading": "Preparando la herramienta de recuperación...",
-  "title": "🧠 Recordando Recuerdos",
-  "subtitle": "Cuando las cosas se ponen difíciles, los amigos se ayudan",
+  "title": "Recuperar Archivos",
+  "subtitle": "Combina las partes que tus amigos guardaron para desbloquear tus archivos.",
+  "page_description": "Cada amigo recibió un kit con su parte de la clave. Reúne suficientes partes abajo, agrega el archivo cifrado, y tus archivos se descifrarán aquí mismo en el navegador. Nada se sube a ningún lado.",
   "step1_title": "Reunir las partes",
   "step1_drop": "Arrastra los archivos LEEME.txt aquí, o haz clic para seleccionarlos",
   "step1_hint": "Cada archivo contiene la parte de una persona",
