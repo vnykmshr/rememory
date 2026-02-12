@@ -245,6 +245,10 @@ friends:
     // Switch back to English
     await creation.setLanguage('en');
     await creation.expectPageTitle('Create Bundles');
+
+    // Switch to Portuguese
+    await creation.setLanguage('pt');
+    await creation.expectPageTitle('Criar Pacotes de Recuperação');
   });
 
   test('minimum 2 friends required', async ({ page }) => {
